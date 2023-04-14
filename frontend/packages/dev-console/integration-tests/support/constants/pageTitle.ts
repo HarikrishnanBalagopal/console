@@ -15,7 +15,7 @@ export const pageTitle = {
   GitOPs: 'GitOps',
   Observe: 'Observe',
   Builds: 'Builds',
-  BuildConfigs: 'Build Configs',
+  BuildConfigs: 'BuildConfigs',
   Search: 'Search',
   HelmReleases: 'Helm Releases',
   Project: 'Project Details',
@@ -60,4 +60,6 @@ export const pageTitle = {
   ShipwrightBuild: 'ShipwrightBuild',
   Helm: 'Helm',
   Samples: 'Samples',
+  CreateServerlessFunction: 'Create Serverless function',
+  AddGitRepository: 'Add Git Repository',
 };

@@ -1,12 +1,26 @@
 @knative-serverless
-Feature: Visualisation of serverless fuctions
-              As a user, I should be able to differentiate between a plain Knative Service and a Serverless Function when looking at the Details page of the KSVC and the details tab of the side panel in Topology
+Feature: Creation and Visualisation of serverless fuctions
+              As a user, I want to create and verify a serverless function from Add Options and I should be able to differentiate between a plain Knative Service and a Serverless Function when looking at the Details page of the KSVC and the details tab of the side panel in Topology.
 
         Background:
             Given user is at developer perspective
-              And user has installed Serverless Operator
-              And user has created Knative Serving instance in knative-serving namespace
               And user has created or selected namespace "aut-serverless-function"
+
+
+        @regression @odc-7167
+        Scenario Outline: Create Serverless Function from Import From Git Form on Add page: SF-01-TC05
+            Given user is at Add page
+              And user is at Import from Git form
+             When user enters Git Repo URL as "<git_url>"
+              And user enters Name as "<workload_name>"
+              And user clicks Create button on Add page
+             Then user will be redirected to Topology page
+              And user clicks on Topology list view
+              And user will see name of the serverless function as KSVC label followed by fx label and name "<workload_name>"
+
+        Examples:
+                  | git_url                                             | workload_name        |
+                  | https://github.com/Lucifergene/serverless-func-repo | serverless-func-repo |
 
 
         @regression @manual
@@ -43,3 +57,23 @@ Feature: Visualisation of serverless fuctions
               And user clicks on heading "nodetest" in the sidebar
              Then user will see type as "Functions" mentioned in the Details tab of Service details page of "nodetest"
               And user will see Labels as boson.dev/function=true and boson.dev/runtime=node in Details tab
+
+        @regression @odc-7167
+        Scenario Outline: Create serverless function using Create Serverless function form: SF-01-TC06
+            Given user is at Add page
+             When user clicks on Create Serverless function card
+              And user enters git url "<git_url>"
+              And user is able to see builder image version dropdown
+              And user is able to see the runtime details
+              And user clicks on Create button on Create Serverless function
+             Then user will be redirected to Topology page
+              And user is able to see workload "<workload_name>" in topology page
+              And user clicks on the Knative Service workload "<workload_name>"
+              And user switches to the "Details" tab
+              And user is able to see Type as Function
+
+
+
+        Examples:
+                  | git_url                                           | workload_name       |
+                  | https://github.com/vikram-raj/hello-func-node-env | hello-func-node-env |

@@ -291,7 +291,6 @@ export enum ImportTypes {
   devfile = 'devfile',
   docker = 'docker',
   s2i = 's2i',
-  pac = 'pac',
 }
 
 export enum Resources {
@@ -299,6 +298,15 @@ export enum Resources {
   Kubernetes = 'kubernetes',
   KnativeService = 'knative',
 }
+
+export enum SupportedRuntime {
+  Node = 'node',
+  NodeJS = 'nodejs',
+  TypeScript = 'typescript',
+  Quarkus = 'quarkus',
+}
+
+export const notSupportedRuntime = ['go', 'rust', 'springboot', 'python'];
 
 export const ReadableResourcesNames: Record<Resources, string> = {
   [Resources.OpenShift]: DeploymentConfigModel.labelKey,

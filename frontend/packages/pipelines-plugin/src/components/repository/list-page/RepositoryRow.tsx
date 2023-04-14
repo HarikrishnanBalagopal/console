@@ -1,14 +1,18 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { TableData, RowFunctionArgs } from '@console/internal/components/factory';
 import {
   Kebab,
   LoadingInline,
+  ResourceIcon,
   ResourceKebab,
   ResourceLink,
+  resourcePath,
   Timestamp,
 } from '@console/internal/components/utils';
 import { useK8sWatchResource } from '@console/internal/components/utils/k8s-watch-hook';
 import { referenceFor, referenceForModel } from '@console/internal/module/k8s';
+import { getLatestRun } from '@console/pipelines-plugin/src/utils/pipeline-augment';
 import { PipelineRunModel, RepositoryModel } from '../../../models';
 import { PipelineRunKind } from '../../../types';
 import {
@@ -18,7 +22,7 @@ import {
 import { pipelineRunDuration } from '../../../utils/pipeline-utils';
 import LinkedPipelineRunTaskStatus from '../../pipelineruns/status/LinkedPipelineRunTaskStatus';
 import PipelineRunStatus from '../../pipelineruns/status/PipelineRunStatus';
-import { getLatestRepositoryPLRName } from '../repository-utils';
+import { RepositoryFields, RepositoryLabels } from '../consts';
 import { RepositoryKind } from '../types';
 import { repositoriesTableColumnClasses } from './RepositoryHeader';
 
@@ -26,24 +30,27 @@ const RepositoryRow: React.FC<RowFunctionArgs<RepositoryKind>> = ({ obj }) => {
   const {
     metadata: { name, namespace },
   } = obj;
-  const pipelineRunName = React.useMemo(() => {
-    if (obj.pipelinerun_status) {
-      return getLatestRepositoryPLRName(obj);
-    }
-    return null;
-  }, [obj]);
 
   const [pipelineRun, loaded] = useK8sWatchResource<PipelineRunKind[]>({
     kind: referenceForModel(PipelineRunModel),
     namespace,
     isList: true,
-    fieldSelector: `metadata.name=${pipelineRunName}`,
+    selector: { matchLabels: { [RepositoryLabels[RepositoryFields.REPOSITORY]]: name } },
   });
-  const latestRun = loaded && pipelineRun[0];
+
+  const latestRun = loaded && getLatestRun(pipelineRun, 'creationTimestamp');
+
   return (
     <>
       <TableData className={repositoriesTableColumnClasses[0]}>
-        <ResourceLink kind={referenceForModel(RepositoryModel)} name={name} namespace={namespace} />
+        <ResourceIcon kind={referenceForModel(RepositoryModel)} />
+        <Link
+          to={`${resourcePath(referenceForModel(RepositoryModel), name, namespace)}/Runs`}
+          className="co-resource-item__resource-name"
+          data-test-id={name}
+        >
+          {name}
+        </Link>
       </TableData>
       <TableData className={repositoriesTableColumnClasses[1]} columnID="namespace">
         <ResourceLink kind="Namespace" name={obj.metadata.namespace} />

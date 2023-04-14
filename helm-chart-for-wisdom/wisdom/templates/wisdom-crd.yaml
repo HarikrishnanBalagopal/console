@@ -1,0 +1,81 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: wisdoms.console.openshift.io
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: console.openshift.io
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1alpha2
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - backends
+              properties:
+                backends:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - discoveryEndpoint
+                    properties:
+                      name:
+                        type: string
+                      discoveryEndpoint:
+                        type: string
+                      auth:
+                        type: object
+                        required:
+                          - secretName
+                        properties:
+                          secretName:
+                            type: string
+    - name: v1alpha1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - serviceBackendUrl
+                - modelId
+                - taskId
+              properties:
+                modelId:
+                  type: string
+                taskId:
+                  type: string
+                serviceBackendUrl:
+                  type: string
+                auth:
+                  type: object
+                  required:
+                    - secretName
+                  properties:
+                    secretName:
+                      type: string
+  # either Namespaced or Cluster
+  scope: Namespaced
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: wisdoms
+    # singular name to be used as an alias on the CLI and for display
+    singular: wisdom
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: Wisdom

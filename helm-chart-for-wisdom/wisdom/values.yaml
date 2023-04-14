@@ -1,0 +1,5 @@
+backends:
+  - name: Local
+    discoveryEndpoint: http://localhost:10000/api/v1/discovery
+    auth:
+      secretName: wisdom-for-localhost-secret

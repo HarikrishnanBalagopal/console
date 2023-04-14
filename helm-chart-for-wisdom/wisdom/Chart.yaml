@@ -1,0 +1,13 @@
+apiVersion: v2
+name: wisdom
+version: '0.0.1'
+description: This chart installs the CRDs and CRs required to interact with the Wisdom backend through the Openshift Web Console.
+type: application
+keywords:
+  - openshift
+  - openshift-console
+  - wisdom
+  - ui
+home: https://github.com/openshift/console
+icon: https://www.redhat.com/cms/managed-files/Asset-Red_Hat-Logo_page-Logo-RGB.svg
+appVersion: '1.150'

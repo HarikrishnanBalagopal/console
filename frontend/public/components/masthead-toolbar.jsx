@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { FLAGS, YellowExclamationTriangleIcon, ACM_LINK_ID } from '@console/shared';
 import { formatNamespacedRouteForResource } from '@console/shared/src/utils';
 import CloudShellMastheadButton from '@console/app/src/components/cloud-shell/CloudShellMastheadButton';
+import WisdomMastheadButton from '@console/app/src/components/wisdom/WisdomMastheadButton';
 import CloudShellMastheadAction from '@console/app/src/components/cloud-shell/CloudShellMastheadAction';
 import isMultiClusterEnabled from '@console/app/src/utils/isMultiClusterEnabled';
 import { getUser } from '@console/dynamic-plugin-sdk';
@@ -359,45 +360,45 @@ class MastheadToolbarContents_ extends React.Component {
         },
         ...(isMultiClusterEnabled()
           ? [
-              {
-                label: t('public~ACM Documentation'),
-                externalLink: true,
-                // TODO:  add version number to end of URL
-                href:
-                  'https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes',
-                callback: () => {
-                  fireTelemetryEvent('ACM Documentation Clicked');
-                },
+            {
+              label: t('public~ACM Documentation'),
+              externalLink: true,
+              // TODO:  add version number to end of URL
+              href:
+                'https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes',
+              callback: () => {
+                fireTelemetryEvent('ACM Documentation Clicked');
               },
-            ]
+            },
+          ]
           : []),
         ...(flags[FLAGS.CONSOLE_CLI_DOWNLOAD]
           ? [
-              {
-                component: (
-                  <Link
-                    onClick={() => {
-                      fireTelemetryEvent('CLI Clicked');
-                    }}
-                    to="/command-line-tools"
-                  >
-                    {t('public~Command line tools')}
-                  </Link>
-                ),
-              },
-            ]
+            {
+              component: (
+                <Link
+                  onClick={() => {
+                    fireTelemetryEvent('CLI Clicked');
+                  }}
+                  to="/command-line-tools"
+                >
+                  {t('public~Command line tools')}
+                </Link>
+              ),
+            },
+          ]
           : []),
         {
           component: <GuidedTourMastheadTrigger ref={tourRef} />,
         },
         ...(reportBugLink
           ? [
-              {
-                label: reportBugLink.label,
-                externalLink: true,
-                href: reportBugLink.href,
-              },
-            ]
+            {
+              label: reportBugLink.label,
+              externalLink: true,
+              href: reportBugLink.href,
+            },
+          ]
           : []),
         {
           label: t('public~About'),
@@ -628,13 +629,14 @@ class MastheadToolbarContents_ extends React.Component {
       showAboutModal,
       statuspageData,
     } = this.state;
-    const { consoleLinks, drawerToggle, canAccessNS, alertCount, t } = this.props;
+    const { consoleLinks, drawerToggle, canAccessNS, alertCount, t, onWisdomToggle, isWisdomOpen } = this.props;
     const launchActions = this._launchActions();
     const alertAccess = canAccessNS && !!window.SERVER_FLAGS.prometheusBaseURL;
     return (
       <>
         <PageHeaderTools>
           <PageHeaderToolsGroup className="hidden-xs">
+            <WisdomMastheadButton onWisdomToggle={onWisdomToggle} isWisdomOpen={isWisdomOpen}/>
             {/* desktop -- (system status button) */}
             <SystemStatusButton statuspageData={statuspageData} />
             {/* desktop -- (application launcher dropdown), import yaml, help dropdown [documentation, about] */}
@@ -655,19 +657,19 @@ class MastheadToolbarContents_ extends React.Component {
               </PageHeaderToolsItem>
             )}
             {/* desktop -- (notification drawer button) */
-            alertAccess && (
-              <PageHeaderToolsItem>
-                <NotificationBadge
-                  aria-label={t('public~Notification drawer')}
-                  onClick={drawerToggle}
-                  variant="read"
-                  count={alertCount || 0}
-                  data-quickstart-id="qs-masthead-notifications"
-                >
-                  <BellIcon alt="" />
-                </NotificationBadge>
-              </PageHeaderToolsItem>
-            )}
+              alertAccess && (
+                <PageHeaderToolsItem>
+                  <NotificationBadge
+                    aria-label={t('public~Notification drawer')}
+                    onClick={drawerToggle}
+                    variant="read"
+                    count={alertCount || 0}
+                    data-quickstart-id="qs-masthead-notifications"
+                  >
+                    <BellIcon alt="" />
+                  </NotificationBadge>
+                </PageHeaderToolsItem>
+              )}
             <PageHeaderToolsItem>
               <Link
                 to={this._getImportYAMLPath()}
@@ -705,19 +707,19 @@ class MastheadToolbarContents_ extends React.Component {
           </PageHeaderToolsGroup>
           <PageHeaderToolsGroup>
             {/* mobile -- (notification drawer button) */
-            alertAccess && alertCount > 0 && (
-              <PageHeaderToolsItem className="visible-xs-block">
-                <NotificationBadge
-                  aria-label={t('public~Notification drawer')}
-                  onClick={drawerToggle}
-                  variant="read"
-                  count={alertCount}
-                  data-quickstart-id="qs-masthead-notifications"
-                >
-                  <BellIcon />
-                </NotificationBadge>
-              </PageHeaderToolsItem>
-            )}
+              alertAccess && alertCount > 0 && (
+                <PageHeaderToolsItem className="visible-xs-block">
+                  <NotificationBadge
+                    aria-label={t('public~Notification drawer')}
+                    onClick={drawerToggle}
+                    variant="read"
+                    count={alertCount}
+                    data-quickstart-id="qs-masthead-notifications"
+                  >
+                    <BellIcon />
+                  </NotificationBadge>
+                </PageHeaderToolsItem>
+              )}
             {/* mobile -- (system status button) */}
             <SystemStatusButton statuspageData={statuspageData} className="visible-xs-block" />
             {/* mobile -- kebab dropdown [(application launcher |) import yaml | documentation, about (| logout)] */}
@@ -760,7 +762,7 @@ const MastheadToolbarContents = connect(mastheadToolbarStateToProps, {
 export const MastheadToolbar = connectToFlags(
   FLAGS.CLUSTER_VERSION,
   FLAGS.CONSOLE_LINK,
-)(({ flags }) => {
+)(({ flags, onWisdomToggle, isWisdomOpen }) => {
   const resources = [];
   if (flags[FLAGS.CLUSTER_VERSION]) {
     resources.push({
@@ -780,7 +782,7 @@ export const MastheadToolbar = connectToFlags(
 
   return (
     <Firehose resources={resources}>
-      <MastheadToolbarContents />
+      <MastheadToolbarContents onWisdomToggle={onWisdomToggle} isWisdomOpen={isWisdomOpen} />
     </Firehose>
   );
 });

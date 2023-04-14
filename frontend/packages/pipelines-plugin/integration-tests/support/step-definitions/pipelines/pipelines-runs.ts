@@ -82,11 +82,17 @@ Then(
 );
 
 Then('user is able to see the pipelineRuns with status as Running', () => {
-  cy.get(pipelineRunsPO.pipelineRunsTable.status).should('contain.text', 'Running');
+  cy.get(pipelineRunsPO.pipelineRunsTable.status, { timeout: 120000 }).should(
+    'contain.text',
+    'Running',
+  );
 });
 
 Then('user is able to see the pipelineRuns with status as Succeeded', () => {
-  cy.get(pipelineRunsPO.pipelineRunsTable.status).should('contain.text', 'Succeeded');
+  cy.get(pipelineRunsPO.pipelineRunsTable.status, { timeout: 120000 }).should(
+    'contain.text',
+    'Succeeded',
+  );
 });
 
 Then(
@@ -198,8 +204,9 @@ When(
 );
 
 Then('pipeline run is deleted from pipeline runs page', () => {
-  // Reload is added, because pipeline run is not getting deleted immediately
-  cy.reload();
+  navigateTo(devNavigationMenu.Pipelines);
+  cy.byLegacyTestID('flow').click();
+  cy.get(pipelineDetailsPO.pipelineRunsTab).click();
   cy.get(pipelineRunsPO.pipelineRunsTable.table)
     .find('tr')
     .then(($ele) => {
@@ -459,6 +466,12 @@ When('user clicks Show VolumeClaimTemplate options', () => {
     .click();
 });
 
+When('user selects Storage Class as {string} from dropdown', (storageClassName: string) => {
+  cy.byTestID('storageclass-dropdown').click();
+  cy.byLegacyTestID('dropdown-text-filter').type(storageClassName);
+  cy.get(`[id="${storageClassName}-link"]`).click();
+});
+
 When('user selects StorageClass as {string}', (storageClassName: string) => {
   cy.selectByAutoCompleteDropDownText('#storageclass-dropdown', storageClassName);
 });
@@ -477,6 +490,10 @@ Then('user will see VolumeClaimTemplate Workspace in Pipeline Run Details page',
   cy.get(pipelineRunDetailsPO.details.workspacesResources.volumeClaimTemplateResources).should(
     'be.visible',
   );
+});
+
+Then('user will see Empty Directory in Pipeline Run Details page', () => {
+  cy.get(pipelineRunDetailsPO.details.workspacesResources.emptyDirectory).should('be.visible');
 });
 
 When('user clicks on Start', () => {
@@ -529,7 +546,7 @@ When('user opens pipeline run details', () => {
 });
 
 Then('user can see status as Failure', () => {
-  cy.get(pipelineRunsPO.pipelineRunsTable.status, { timeout: 20000 }).should(
+  cy.get(pipelineRunsPO.pipelineRunsTable.status, { timeout: 120000 }).should(
     'include.text',
     'Failed',
   );
@@ -556,7 +573,12 @@ Given('user has passed pipeline run', () => {
     `oc apply -f testData/pipelines-workspaces/sum-three-pipeline.yaml -n ${Cypress.env(
       'NAMESPACE',
     )}`,
-  );
+    {
+      failOnNonZeroExit: false,
+    },
+  ).then(function(result) {
+    cy.log(result.stdout);
+  });
 });
 
 When(

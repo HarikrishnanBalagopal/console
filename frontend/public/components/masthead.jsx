@@ -46,7 +46,7 @@ export const getBrandingDetails = () => {
   return { logoImg, productName };
 };
 
-export const Masthead = React.memo(({ onNavToggle, isNavOpen }) => {
+export const Masthead = React.memo(({ onNavToggle, isNavOpen, onWisdomToggle, isWisdomOpen }) => {
   const details = getBrandingDetails();
   const defaultRoute = '/';
   const logoProps = {
@@ -63,7 +63,7 @@ export const Masthead = React.memo(({ onNavToggle, isNavOpen }) => {
       id="page-main-header"
       logo={<Brand src={details.logoImg} alt={details.productName} />}
       logoProps={logoProps}
-      headerTools={<MastheadToolbar />}
+      headerTools={<MastheadToolbar onWisdomToggle={onWisdomToggle} isWisdomOpen={isWisdomOpen} />}
       showNavToggle
       onNavToggle={onNavToggle}
       isNavOpen={isNavOpen}
@@ -74,4 +74,6 @@ export const Masthead = React.memo(({ onNavToggle, isNavOpen }) => {
 Masthead.propTypes = {
   onNavToggle: PropTypes.func,
   isNavOpen: PropTypes.bool,
+  onWisdomToggle: PropTypes.func,
+  isWisdomOpen: PropTypes.bool,
 };

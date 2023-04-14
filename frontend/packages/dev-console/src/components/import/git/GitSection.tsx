@@ -4,11 +4,17 @@ import { useFormikContext, FormikErrors, FormikTouched } from 'formik';
 import { isEmpty } from 'lodash';
 import * as _ from 'lodash';
 import { useTranslation } from 'react-i18next';
+import { useAccessReview } from '@console/dynamic-plugin-sdk/src';
 import { RepoStatus, ImportStrategy, getGitService, GitProvider } from '@console/git-service';
 import { DetectedBuildType } from '@console/git-service/src/utils/build-tool-type-detector';
 import { detectImportStrategies } from '@console/git-service/src/utils/import-strategy-detector';
+import { getActiveNamespace } from '@console/internal/actions/ui';
 import { BuildStrategyType } from '@console/internal/components/build';
-import { FLAG_OPENSHIFT_PIPELINE_AS_CODE } from '@console/pipelines-plugin/src/const';
+import {
+  FLAG_KNATIVE_SERVING_SERVICE,
+  ServerlessBuildStrategyType,
+  ServiceModel as ksvcModel,
+} from '@console/knative-plugin';
 import {
   InputField,
   DropdownField,
@@ -87,7 +93,6 @@ const GitSection: React.FC<GitSectionProps> = ({
   imageStreamName,
 }) => {
   const { t } = useTranslation();
-  const isRepositoryEnabled = useFlag(FLAG_OPENSHIFT_PIPELINE_AS_CODE);
   const inputRef = React.useRef<HTMLInputElement>();
 
   const {
@@ -100,6 +105,15 @@ const GitSection: React.FC<GitSectionProps> = ({
     setFieldValue: formikSetFieldValue,
     setFieldTouched: formikSetFieldTouched,
   } = useFormikContext<GitSectionFormData>();
+
+  const [knativeServiceAccess] = useAccessReview({
+    group: ksvcModel.apiGroup,
+    resource: ksvcModel.plural,
+    namespace: getActiveNamespace(),
+    verb: 'create',
+  });
+
+  const canIncludeKnative = useFlag(FLAG_KNATIVE_SERVING_SERVICE) && knativeServiceAccess;
 
   const fieldPrefix = formContextField ? `${formContextField}.` : '';
   const setFieldValue = React.useCallback(
@@ -266,7 +280,7 @@ const GitSection: React.FC<GitSectionProps> = ({
         values.docker?.dockerfilePath,
       );
 
-      const importStrategyData = await detectImportStrategies(url, gitService, isRepositoryEnabled);
+      const importStrategyData = await detectImportStrategies(url, gitService, canIncludeKnative);
 
       const {
         loaded,
@@ -360,9 +374,8 @@ const GitSection: React.FC<GitSectionProps> = ({
             setFieldValue('docker.dockerfileHasError', false);
             break;
           }
-          case ImportStrategy.PAC: {
-            setFieldValue('build.strategy', BuildStrategyType.Pac);
-            setFieldValue('pac.pacHasError', false);
+          case ImportStrategy.SERVERLESS_FUNCTION: {
+            setFieldValue('build.strategy', ServerlessBuildStrategyType.ServerlessFunction);
             break;
           }
           default:
@@ -390,7 +403,7 @@ const GitSection: React.FC<GitSectionProps> = ({
       values.application.name,
       values.application.selectedKey,
       values.build.strategy,
-      isRepositoryEnabled,
+      canIncludeKnative,
       nameTouched,
       importType,
       imageStreamName,
@@ -545,7 +558,7 @@ const GitSection: React.FC<GitSectionProps> = ({
             fullWidth
             required
           />
-          {values.git.detectedType === GitProvider.UNSURE && (
+          {values.git.type === GitProvider.UNSURE && (
             <Alert isInline variant="info" title={t('devconsole~Defaulting Git type to other')}>
               {t('devconsole~We failed to detect the Git type.')}
             </Alert>

@@ -24,6 +24,7 @@ import { receivedResources, startAPIDiscovery } from '../actions/k8s';
 import { pluginStore } from '../plugins';
 // cloud shell imports must come later than features
 import CloudShell from '@console/app/src/components/cloud-shell/CloudShell';
+import WisdomSidebar from '@console/app/src/components/wisdom/WisdomSidebar';
 import CloudShellTab from '@console/app/src/components/cloud-shell/CloudShellTab';
 import DetectPerspective from '@console/app/src/components/detect-perspective/DetectPerspective';
 import DetectCluster from '@console/app/src/components/detect-cluster/DetectCluster';
@@ -43,6 +44,7 @@ import { initConsolePlugins } from '@console/dynamic-plugin-sdk/src/runtime/plug
 import { GuidedTour } from '@console/app/src/components/tour';
 import QuickStartDrawer from '@console/app/src/components/quick-starts/QuickStartDrawerAsync';
 import { ModalProvider } from '@console/dynamic-plugin-sdk/src/app/modal-support/ModalProvider';
+import { settleAllPromises } from '@console/dynamic-plugin-sdk/src/utils/promise';
 import ToastProvider from '@console/shared/src/components/toast/ToastProvider';
 import { useToast } from '@console/shared/src/components/toast';
 import { useTelemetry } from '@console/shared/src/hooks/useTelemetry';
@@ -63,6 +65,7 @@ const NOTIFICATION_DRAWER_BREAKPOINT = 1800;
 import 'url-search-params-polyfill';
 import { withoutSensitiveInformations } from './utils/telemetry';
 import { graphQLReady } from '../graphql/client';
+import { isWisdomExpanded } from '@console/app/src/redux/reducers/wisdom-selectors';
 
 initI18n();
 
@@ -80,6 +83,7 @@ class App_ extends React.PureComponent {
     super(props);
 
     this._onNavToggle = this._onNavToggle.bind(this);
+    this._onWisdomToggle = this._onWisdomToggle.bind(this);
     this._onNavSelect = this._onNavSelect.bind(this);
     this._onNotificationDrawerToggle = this._onNotificationDrawerToggle.bind(this);
     this._isDesktop = this._isDesktop.bind(this);
@@ -89,6 +93,7 @@ class App_ extends React.PureComponent {
 
     this.state = {
       isNavOpen: this._isDesktop(),
+      isWisdomOpen: false,
       isDrawerInline: this._isLargeLayout(),
     };
   }
@@ -136,6 +141,14 @@ class App_ extends React.PureComponent {
     });
   }
 
+  _onWisdomToggle() {
+    this.setState((prevState) => {
+      return {
+        isWisdomOpen: !prevState.isWisdomOpen,
+      };
+    });
+  }
+
   _onNotificationDrawerToggle() {
     if (this._isLargeLayout()) {
       // Fire event after the drawer animation speed delay.
@@ -166,7 +179,7 @@ class App_ extends React.PureComponent {
   }
 
   render() {
-    const { isNavOpen, isDrawerInline } = this.state;
+    const { isNavOpen, isWisdomOpen, isDrawerInline } = this.state;
     const { contextProviderExtensions } = this.props;
     const { productName } = getBrandingDetails();
 
@@ -179,7 +192,7 @@ class App_ extends React.PureComponent {
             <Page
               // Need to pass mainTabIndex=null to enable keyboard scrolling as default tabIndex is set to -1 by patternfly
               mainTabIndex={null}
-              header={<Masthead isNavOpen={isNavOpen} onNavToggle={this._onNavToggle} />}
+              header={<Masthead isNavOpen={isNavOpen} onNavToggle={this._onNavToggle} isWisdomOpen={isWisdomOpen} onWisdomToggle={this._onWisdomToggle} />}
               sidebar={
                 <Navigation
                   isNavOpen={isNavOpen}
@@ -194,6 +207,8 @@ class App_ extends React.PureComponent {
                   Skip to Content
                 </SkipToContent>
               }
+              notificationDrawer={<WisdomSidebar onClose={this._onWisdomToggle} />}
+              isNotificationDrawerExpanded={isWisdomOpen}
             >
               <ConnectedNotificationDrawer
                 isDesktop={isDrawerInline}
@@ -311,28 +326,47 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
 
   const [isToastOpen, setToastOpen] = React.useState(false);
   const [pluginsChanged, setPluginsChanged] = React.useState(false);
+  const [pluginVersionsChanged, setPluginVersionsChanged] = React.useState(false);
   const [consoleChanged, setConsoleChanged] = React.useState(false);
   const [isFetchingPluginEndpoints, setIsFetchingPluginEndpoints] = React.useState(false);
   const [allPluginEndpointsReady, setAllPluginEndpointsReady] = React.useState(false);
 
   const [pluginsData, setPluginsData] = React.useState();
   const [pluginsError, setPluginsError] = React.useState();
+  const [pluginManifestsData, setPluginManifestsData] = React.useState();
   const safeFetch = React.useCallback(useSafeFetch(), []);
+  const fetchPluginManifest = (pluginName) =>
+    coFetchJSON(
+      `${window.SERVER_FLAGS.basePath}api/plugins/${pluginName}/plugin-manifest.json`,
+      'get',
+      { cache: 'no-cache' },
+    );
   const tick = React.useCallback(() => {
     safeFetch(`${window.SERVER_FLAGS.basePath}api/check-updates`)
       .then((response) => {
         setPluginsData(response);
         setPluginsError(null);
+        const pluginManifests = response?.plugins?.map((pluginName) =>
+          fetchPluginManifest(pluginName),
+        );
+        if (pluginManifests) {
+          settleAllPromises(pluginManifests).then(([fulfilledValues]) => {
+            setPluginManifestsData(fulfilledValues);
+          });
+        }
       })
       .catch(setPluginsError);
   }, [safeFetch]);
   usePoll(tick, URL_POLL_DEFAULT_DELAY);
 
   const prevPluginsDataRef = React.useRef();
+  const prevPluginManifestsDataRef = React.useRef();
   React.useEffect(() => {
     prevPluginsDataRef.current = pluginsData;
+    prevPluginManifestsDataRef.current = pluginManifestsData;
   });
   const prevPluginsData = prevPluginsDataRef.current;
+  const prevPluginManifestsData = prevPluginManifestsDataRef.current;
   const stateInitialized = _.isEmpty(pluginsError) && !_.isEmpty(prevPluginsData);
 
   const pluginsListChanged = !_.isEmpty(_.xor(prevPluginsData?.plugins, pluginsData?.plugins));
@@ -341,11 +375,9 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
   }
 
   if (pluginsChanged && !allPluginEndpointsReady && !isFetchingPluginEndpoints) {
-    const pluginEndpointsReady = pluginsData?.plugins?.map((pluginName) => {
-      return coFetchJSON(
-        `${window.SERVER_FLAGS.basePath}api/plugins/${pluginName}/plugin-manifest.json`,
-      );
-    });
+    const pluginEndpointsReady = pluginsData?.plugins?.map((pluginName) =>
+      fetchPluginManifest(pluginName),
+    );
     Promise.all(pluginEndpointsReady)
       .then(() => {
         setAllPluginEndpointsReady(true);
@@ -358,6 +390,22 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
     setIsFetchingPluginEndpoints(true);
   }
 
+  const pluginManifestsVersionsChanged = pluginManifestsData?.some((manifest) => {
+    return prevPluginManifestsData?.some((previousManifest) => {
+      return (
+        manifest.name === previousManifest.name && manifest.version !== previousManifest.version
+      );
+    });
+  });
+  if (
+    stateInitialized &&
+    !_.isEmpty(prevPluginManifestsData) &&
+    pluginManifestsVersionsChanged &&
+    !pluginVersionsChanged
+  ) {
+    setPluginVersionsChanged(true);
+  }
+
   const consoleCommitChanged = prevPluginsData?.consoleCommit !== pluginsData?.consoleCommit;
   if (stateInitialized && consoleCommitChanged && !consoleChanged) {
     setConsoleChanged(true);
@@ -367,7 +415,7 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
     return null;
   }
 
-  if (!pluginsChanged && !consoleChanged) {
+  if (!pluginsChanged && !pluginVersionsChanged && !consoleChanged) {
     return null;
   }
 
@@ -378,6 +426,7 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
   const toastCallback = () => {
     setToastOpen(false);
     setPluginsChanged(false);
+    setPluginVersionsChanged(false);
     setConsoleChanged(false);
     setAllPluginEndpointsReady(false);
     setIsFetchingPluginEndpoints(false);
@@ -402,6 +451,7 @@ const PollConsoleUpdates = React.memo(function PollConsoleUpdates() {
             window.location.reload();
           }
         },
+        dataTest: 'refresh-web-console',
       },
     ],
     onClose: toastCallback,

@@ -29,6 +29,7 @@ import {
   getDomainMappingRequests,
   getKnativeServiceDepResource,
 } from '@console/knative-plugin/src/utils/create-knative-utils';
+import { PipelineType } from '@console/pipelines-plugin/src/components/import/import-types';
 import {
   createPipelineForImportFlow,
   createPipelineRunForImportFlow,
@@ -698,10 +699,9 @@ export const createOrUpdateResources = async (
     return createDevfileResources(formData, dryRun, appResources, generatedImageStreamName);
   }
 
-  if (buildStrategy === BuildStrategyType.Pac) {
+  if (pipeline.type === PipelineType.PAC) {
     const repo = await createRepositoryResources(pacRepository, namespace, dryRun);
     responses.push(repo);
-    return responses;
   }
 
   const imageStreamResponse = await createOrUpdateImageStream(
@@ -714,7 +714,7 @@ export const createOrUpdateResources = async (
   );
   responses.push(imageStreamResponse);
 
-  if (pipeline.enabled) {
+  if (pipeline.enabled && pipeline.type !== PipelineType.PAC) {
     if (!dryRun) {
       const pipelineResources = await managePipelineResources(
         formData,

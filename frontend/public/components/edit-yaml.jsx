@@ -46,6 +46,8 @@ import { findOwner } from '../module/k8s/managed-by';
 import { ClusterServiceVersionModel } from '@console/operator-lifecycle-manager/src/models';
 import { definitionFor } from '../module/k8s/swagger';
 import { ImportYAMLResults } from './import-yaml-results';
+import { selectWisdomYaml, selectWisdomYamlAppend } from '@console/app/src/redux/reducers/wisdom-selectors';
+import { setCurrentEditorYaml, setWisdomYaml } from '@console/app/src/redux/actions/wisdom-actions';
 
 const generateObjToLoad = (templateExtensions, kind, id, yaml, namespace = 'default') => {
   const sampleObj = safeLoad(yaml ? yaml : getYAMLTemplates(templateExtensions).getIn([kind, id]));
@@ -56,9 +58,16 @@ const generateObjToLoad = (templateExtensions, kind, id, yaml, namespace = 'defa
 };
 
 const stateToProps = (state) => ({
+  wisdomYaml: selectWisdomYaml(state),
+  wisdomYamlAppend: selectWisdomYamlAppend(state),
   activeNamespace: state.UI.get('activeNamespace'),
   impersonate: getImpersonate(state),
   models: state.k8s.getIn(['RESOURCES', 'models']),
+});
+
+const dispatchToProps = (dispatch) => ({
+  'setWisdomYaml': (yaml, isAppend) => dispatch(setWisdomYaml(yaml, isAppend)),
+  'setEditorYaml': (yaml) => dispatch(setCurrentEditorYaml(yaml)),
 });
 
 const WithYamlTemplates = (Component) =>
@@ -80,7 +89,7 @@ const WithYamlTemplates = (Component) =>
  * Consider using `AsyncComponent` to dynamically load this component when needed.
  */
 /** @augments {React.Component<{allowMultiple?: boolean, obj?: any, create: boolean, kind: string, redirectURL?: string, resourceObjPath?: (obj: K8sResourceKind, objRef: string) => string}, onChange?: (yaml: string) => void, clearFileUpload?: () => void>} */
-export const EditYAML_ = connect(stateToProps)(
+export const EditYAML_ = connect(stateToProps, dispatchToProps)(
   WithYamlTemplates(
     withPostFormSubmissionCallback(
       class EditYAML extends React.Component {
@@ -106,6 +115,7 @@ export const EditYAML_ = connect(stateToProps)(
           this.setDisplayResults = this.setDisplayResults.bind(this);
           this.onRetry = this.onRetry.bind(this);
           this.createResources = this.createResources.bind(this);
+          this.setInitialValue = this.setInitialValue.bind(this);
           if (this.props.error) {
             this.handleError(this.props.error);
           }
@@ -190,6 +200,26 @@ export const EditYAML_ = connect(stateToProps)(
         componentDidMount() {
           this.loadYaml();
           this.loadCSVs();
+          this.setInitialValue();
+        }
+
+        componentDidUpdate() {
+          this.setInitialValue();
+        }
+
+        componentWillUnmount() {
+          this.props.setEditorYaml('');
+        }
+
+        setInitialValue() {
+          if (!this.state.initialized || !this.props.wisdomYaml) return;
+          console.log('this.props.wisdomYamlAppend', this.props.wisdomYamlAppend);
+          if (this.props.wisdomYamlAppend) {
+            this.loadYaml(true, this.props.wisdomYaml);
+          } else {
+            this.loadYamlString(true, this.props.wisdomYaml);
+          }
+          this.props.setWisdomYaml(undefined, false);
         }
 
         UNSAFE_componentWillReceiveProps(nextProps) {
@@ -300,6 +330,16 @@ export const EditYAML_ = connect(stateToProps)(
 
           const yaml = this.convertObjToYAMLString(obj);
           this.displayedVersion = _.get(obj, 'metadata.resourceVersion');
+          this.getEditor().setValue(yaml);
+          this.setState({ initialized: true, stale: false });
+        }
+
+        loadYamlString(reload = false, yaml = '') {
+          if (this.state.initialized && !reload) {
+            return;
+          }
+
+          this.displayedVersion = _.get(yaml, 'metadata.resourceVersion');
           this.getEditor().setValue(yaml);
           this.setState({ initialized: true, stale: false });
         }
@@ -592,10 +632,16 @@ export const EditYAML_ = connect(stateToProps)(
             onChange = () => null,
             t,
             models,
+            setEditorYaml,
           } = this.props;
           const klass = classNames('co-file-dropzone-container', {
             'co-file-dropzone--drop-over': isOver,
           });
+          const onChangeWithWisdomHook = (newValue, event) => {
+            // console.log('onChangeWithWisdomHook --------------------- newValue', newValue, 'event', event);
+            setEditorYaml(newValue);
+            onChange(newValue, event);
+          };
 
           const {
             errors,
@@ -683,7 +729,7 @@ export const EditYAML_ = connect(stateToProps)(
                         showShortcuts={!genericYAML}
                         minHeight="100px"
                         toolbarLinks={sidebarLink ? [sidebarLink] : []}
-                        onChange={onChange}
+                        onChange={onChangeWithWisdomHook}
                         onSave={() => (allowMultiple ? this.saveAll() : this.save())}
                       />
                       <div className="yaml-editor__buttons" ref={(r) => (this.buttons = r)}>
@@ -796,12 +842,12 @@ const EditYAMLWithTranslation = withTranslation()(EditYAML_);
 export const EditYAML = connectToFlags(FLAGS.CONSOLE_YAML_SAMPLE)(({ flags, ...props }) => {
   const resources = flags[FLAGS.CONSOLE_YAML_SAMPLE]
     ? [
-        {
-          kind: referenceForModel(ConsoleYAMLSampleModel),
-          isList: true,
-          prop: 'yamlSamplesList',
-        },
-      ]
+      {
+        kind: referenceForModel(ConsoleYAMLSampleModel),
+        isList: true,
+        prop: 'yamlSamplesList',
+      },
+    ]
     : [];
 
   return (

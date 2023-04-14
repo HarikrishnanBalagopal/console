@@ -1,0 +1,7 @@
+apiVersion: console.openshift.io/v1alpha2
+kind: Wisdom
+metadata:
+  name: wisdom-config
+spec:
+  backends:
+{{ toYaml .Values.backends | indent 4 }}

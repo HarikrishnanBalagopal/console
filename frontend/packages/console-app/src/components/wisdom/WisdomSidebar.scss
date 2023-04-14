@@ -1,0 +1,59 @@
+.wisdom-code-block-wrapper {
+    position: relative;
+}
+
+
+.pf-l-stack.wisdom-code-block-corner-buttons {
+    position: absolute;
+    top: 0em;
+    right: 0em;
+    padding-top: .5em;
+}
+
+.pf-c-drawer__panel:has(.on-top-z-index-301) {
+    z-index: 301;
+}
+
+.align-flex-end {
+    justify-content: flex-end;
+}
+
+.margin-top-bottom-1em {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.pf-c-divider.margin-top-bottom-1em {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.overflow-x-scroll {
+    overflow-x: scroll;
+}
+
+.max-width-30em {
+    max-width: 30em;
+}
+
+.center-text {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-place-items-center {
+    place-items: center;
+}
+
+.flex-gap-1em {
+    gap: 1em;
+}
+
+.padding-1em {
+    padding: 1em;
+}

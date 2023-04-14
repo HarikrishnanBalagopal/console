@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { FormikValues, useFormikContext } from 'formik';
 import { Trans, useTranslation } from 'react-i18next';
+import { ImportStrategy } from '@console/git-service/src';
 import { ProgressiveList, ProgressiveListItem } from '@console/shared/src';
 import { AppResources } from '../../edit-application/edit-application-types';
 import HealthChecks from '../../health-checks/HealthChecks';
@@ -47,11 +48,12 @@ const List: React.FC<AdvancedSectionProps> = ({ appResources, values }) => {
       onVisibleItemChange={handleVisibleItemChange}
       Footer={Footer}
     >
-      {!['edit', 'knatify'].includes(values.formType) && (
-        <ProgressiveListItem name={t('devconsole~Resource type')}>
-          <ResourceSection />
-        </ProgressiveListItem>
-      )}
+      {!['edit', 'knatify'].includes(values.formType) &&
+        values.import?.selectedStrategy?.type !== ImportStrategy.SERVERLESS_FUNCTION && (
+          <ProgressiveListItem name={t('devconsole~Resource type')}>
+            <ResourceSection />
+          </ProgressiveListItem>
+        )}
       <ProgressiveListItem name={t('devconsole~Health checks')}>
         <HealthChecks title={t('devconsole~Health checks')} resourceType={values.resources} />
       </ProgressiveListItem>
@@ -93,7 +95,8 @@ const AdvancedSection: React.FC<AdvancedSectionProps> = ({ values, appResources 
   const { setFieldValue } = useFormikContext<FormikValues>();
 
   React.useEffect(() => {
-    !['edit', 'knatify'].includes(values.formType) && setFieldValue('resources', resourceType);
+    !['edit', 'knatify', 'serverlessFunction'].includes(values.formType) &&
+      setFieldValue('resources', resourceType);
   }, [resourceType, setFieldValue, values.formType]);
 
   return (

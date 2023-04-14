@@ -3,7 +3,7 @@ Feature: Create Pipeline from Add Options
               As a user, I want to create, edit, delete and view the pipeline
 
         Background:
-            Given user has created or selected namespace "aut-pipelines-add-options"
+            Given user has created or selected namespace "aut-pipelines"
 
 
         @smoke
@@ -27,7 +27,7 @@ Feature: Create Pipeline from Add Options
         Scenario Outline: Create a pipeline from git workload with knative resource type: P-01-TC03
             Given user has installed OpenShift Serverless Operator
               And user is at developer perspective
-              And user has created or selected namespace "aut-pipelines-add-options"
+              And user has created or selected namespace "aut-pipelines"
               And user is at Add page
               And user is at Import from Git form
              When user enters Git Repo URL as "<git_url>"
@@ -43,7 +43,7 @@ Feature: Create Pipeline from Add Options
                   | https://github.com/sclorg/nodejs-ex.git | nodejs-ex-git-kn |
 
 
-        # https://bugzilla.redhat.com/show_bug.cgi?id=2061302
+    # https://bugzilla.redhat.com/show_bug.cgi?id=2061302
         @smoke @broken-test
         Scenario Outline: Pipeline details display in topology page: P-01-TC04
             Given user created workload "<name>" from add page with pipeline
@@ -106,7 +106,7 @@ Feature: Create Pipeline from Add Options
                   | https://github.com/sclorg/nodejs-ex.git | nodejs-ex-git |
 
 
-        #Marking this as manual due to git rate limit  issue
+    #Marking this as manual due to git rate limit  issue
         @regression @manual
         Scenario Outline: Add Pipeline option display in git workload for builder image: P-01-TC08
             Given user is at Import from Git form
@@ -189,3 +189,26 @@ Feature: Create Pipeline from Add Options
                   | pipeline_yaml                              | custom_pipeline_name         | git_url                                 | application_name | resource          |
                   | testData/customNodeDeployment.yaml         | s2i-nodejs-custom-deployment | https://github.com/sclorg/nodejs-ex.git | nodejs-ex-1      | Deployment        |
                   | testData/customPythonDeploymentConfig.yaml | s2i-python-custom            | https://github.com/sclorg/django-ex.git | django-ex-1      | Deployment Config |
+
+
+        @regression @odc-7128
+        Scenario Outline: Create a PAC Repository and other resources from git workload: P-01-TC13
+            Given user is at Import from Git form
+             When user enters Git Repo URL as "<git_url>"
+              And user enters Name as "<workload_name>" in General section
+              And user verifies Add Pipeline checkbox is checked in Pipelines section
+              And user enters secret as "github-secret"
+              And user clicks the Generate Webhook Secret to generate Webhook secret
+              And user clicks Create button on Add page to see workload "<workload_name>" in topology page
+              And user navigates to the Repositories Tab on the Pipelines Page
+              And user searches and selects the repository "<workload_name>" on Repository page
+             Then user will be redirected to Repository details page with header "<workload_name>"
+              And user is able to see Details, YAML, Pipeline Runs tabs
+              And user selects option "Delete Repository" from Actions menu drop down
+              And user clicks Delete button on Delete Repository modal
+              And "<workload_name>" is not displayed on Repositories page
+
+        Examples:
+                  | git_url                                | workload_name      |
+                  | https://github.com/Lucifergene/oc-pipe | openshift-pac-repo |
+                  

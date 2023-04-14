@@ -24,6 +24,17 @@
   {
     "type": "console.flag/model",
     "properties": {
+      "flag": "v1alpha2WISDOM",
+      "model": {
+        "group": "console.openshift.io",
+        "version": "v1alpha2",
+        "kind": "Wisdom"
+      }
+    }
+  },
+  {
+    "type": "console.flag/model",
+    "properties": {
       "flag": "v1alpha2DEVWORKSPACE",
       "model": {
         "group": "workspace.devfile.io",

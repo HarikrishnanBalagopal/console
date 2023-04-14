@@ -60,6 +60,7 @@ export const addPage = {
         break;
       case 'Pipeline':
       case addOptions.Pipeline:
+        cy.wait(3000);
         cy.byTestID('item pipeline').click();
         cy.get('.odc-pipeline-builder-header__title').should(
           'have.text',
@@ -120,6 +121,16 @@ export const addPage = {
         cy.byTestID('item project-helm-chart-repositories').click();
         cy.get('[data-test="form-title"]').should('have.text', pageTitle.CreateHelmChartRepository);
         cy.testA11y(pageTitle.CreateHelmChartRepository);
+        break;
+      case 'Create Serverless function':
+      case addOptions.CreateServerlessFunction:
+        cy.byTestID('item create-serverless-function').click();
+        app.waitForLoad();
+        cy.get('[data-test-id="resource-title"]').should(
+          'have.text',
+          pageTitle.CreateServerlessFunction,
+        );
+        cy.testA11y(pageTitle.CreateServerlessFunction);
         break;
       default:
         throw new Error(`Unable to find the "${card}" card on Add page`);

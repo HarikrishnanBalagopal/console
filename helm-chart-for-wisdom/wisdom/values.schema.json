@@ -1,0 +1,45 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "Values",
+    "required": [
+        "backends"
+    ],
+    "properties": {
+        "backends": {
+            "type": "array",
+            "description": "An array of wisdom backends",
+            "items": {
+                "type": "object",
+                "description": "A wisdom backend",
+                "required": [
+                    "name",
+                    "discoveryEndpoint"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "A name for the backend"
+                    },
+                    "discoveryEndpoint": {
+                        "type": "string",
+                        "description": "URL to the backend's discovery endpoint"
+                    },
+                    "auth": {
+                        "type": "object",
+                        "description": "Use if the Wisdom backend requires authentication",
+                        "required": [
+                            "secretName"
+                        ],
+                        "properties": {
+                            "secretName": {
+                                "type": "string",
+                                "description": "Name of a K8s secret containing the email and token to use for authentication"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

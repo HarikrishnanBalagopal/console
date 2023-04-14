@@ -2,7 +2,7 @@ import { BaseService } from '../services/base-service';
 import { RepoStatus } from '../types';
 import { ImportStrategy } from '../types/git';
 import { detectBuildTypes } from './build-tool-type-detector';
-import { detectPacFiles, isPacRepository } from './pac-strategy-detector';
+import { isServerlessFxRepository } from './serverless-strategy-detector';
 
 type ImportStrategyType = {
   name: string;
@@ -17,12 +17,18 @@ const ImportStrategyList: ImportStrategyType[] = [
     name: 'Devfile',
     type: ImportStrategy.DEVFILE,
     expectedRegexp: /^\.?devfile\.yaml$/,
-    priority: 2,
+    priority: 3,
   },
   {
     name: 'Dockerfile',
     type: ImportStrategy.DOCKERFILE,
     expectedRegexp: /^Dockerfile.*/,
+    priority: 2,
+  },
+  {
+    name: 'Serverless Function',
+    type: ImportStrategy.SERVERLESS_FUNCTION,
+    expectedRegexp: /^func\.(yaml|yml)$/,
     priority: 1,
   },
   {
@@ -31,13 +37,6 @@ const ImportStrategyList: ImportStrategyType[] = [
     expectedRegexp: /^/,
     priority: 0,
     customDetection: detectBuildTypes,
-  },
-  {
-    name: 'Pipeline as Code',
-    type: ImportStrategy.PAC,
-    expectedRegexp: /^\.?tekton$/,
-    priority: 3,
-    customDetection: detectPacFiles,
   },
 ];
 
@@ -59,9 +58,10 @@ type DetectedServiceData = {
 export const detectImportStrategies = async (
   repository: string,
   gitService: BaseService,
-  isRepositoryEnabled: boolean = false,
+  isServerlessEnabled: boolean = false,
 ): Promise<DetectedServiceData> => {
   let detectedStrategies: DetectedStrategy[] = [];
+  let addServerlessFxStrategy: boolean;
   let loaded: boolean = false;
   let loadError = null;
 
@@ -70,14 +70,11 @@ export const detectImportStrategies = async (
     : RepoStatus.GitTypeNotDetected;
   let detectedFiles: string[] = [];
   let detectedCustomData: string[];
-  let pacFiles: string[] = [];
-  let addPacRepositoryStrategy: boolean;
 
   if (repositoryStatus === RepoStatus.Reachable) {
     try {
       const { files } = await gitService.getRepoFileList({ includeFolder: true });
-      pacFiles = await detectPacFiles(gitService);
-      addPacRepositoryStrategy = await isPacRepository(isRepositoryEnabled, gitService, pacFiles);
+      addServerlessFxStrategy = await isServerlessFxRepository(isServerlessEnabled, gitService);
 
       detectedStrategies = await Promise.all(
         ImportStrategyList.map<Promise<DetectedStrategy>>(async (strategy) => {
@@ -103,9 +100,9 @@ export const detectImportStrategies = async (
     loaded = true;
   }
 
-  if (!addPacRepositoryStrategy) {
+  if (!addServerlessFxStrategy) {
     detectedStrategies = detectedStrategies.filter(
-      (strategy) => strategy.type !== ImportStrategy.PAC,
+      (strategy) => strategy.type !== ImportStrategy.SERVERLESS_FUNCTION,
     );
   }
 
