@@ -308,7 +308,7 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
                   <Spinner /> Fetching the list of Wisdom backends...
                 </div>
               ) : hideAdvancedTab ? (
-                <div>Wisdom backends loaded.</div>
+                null
               ) : (
                 <ExpandableSection toggleText='Advanced'>
                   <div className='max-width-30em'>
