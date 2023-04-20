@@ -40,6 +40,7 @@ import {
   setWisdomCurrentModelId, setWisdomCurrentTaskId, setWisdomYaml
 } from '../../redux/actions/wisdom-actions';
 import {
+  isWisdomHideAdvancedTab,
   isWisdomLoading,
   isWisdomSendingFeedback,
   selectWisdomAllBackends,
@@ -74,6 +75,7 @@ type StateProps = {
   currentTaskId?: string;
   currentJobProgress?: number;
   currentEditorYaml?: string;
+  hideAdvancedTab?: boolean;
 };
 
 type DispatchProps = {
@@ -175,6 +177,7 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
   currentTaskId,
   currentJobProgress,
   currentEditorYaml,
+  hideAdvancedTab,
   onClose,
   openCloudshell,
   sendQuery,
@@ -304,6 +307,8 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
                 <div className='center-text'>
                   <Spinner /> Fetching the list of Wisdom backends...
                 </div>
+              ) : hideAdvancedTab ? (
+                <div>Wisdom backends loaded.</div>
               ) : (
                 <ExpandableSection toggleText='Advanced'>
                   <div className='max-width-30em'>
@@ -476,6 +481,7 @@ const stateToProps = (state: RootState): StateProps => ({
   currentTaskId: selectWisdomCurrentTaskId(state),
   currentJobProgress: selectWisdomCurrentJobProgress(state),
   currentEditorYaml: selectWisdomCurrentEditorYaml(state),
+  hideAdvancedTab: isWisdomHideAdvancedTab(state),
 });
 
 const dispatchToProps = (dispatch): DispatchProps => ({

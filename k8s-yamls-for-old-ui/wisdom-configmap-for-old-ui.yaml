@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: wisdom-api-endpoint
+  namespace: openshift-config
 data:
-  endpoint: https://wisdom.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud/
-  # endpoint: https://rhassistant-rhassistant.apps.os1.zurich.ibm.com
+  # endpoint: https://wisdom.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud
+  endpoint: https://rhassistant-rhassistant.apps.os1.zurich.ibm.com

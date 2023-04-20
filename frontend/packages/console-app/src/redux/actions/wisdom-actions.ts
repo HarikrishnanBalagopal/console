@@ -8,6 +8,7 @@ import { isWisdomFetchingBackends, selectWisdomAllBackends, selectWisdomCurrentB
 
 export enum Actions {
   SetWisdomExpanded = 'setWisdomExpanded',
+  SetWisdomHideAdvancedTab = 'setWisdomHideAdvancedTab',
   SetWisdomFetchingBackends = 'setWisdomFetchingBackends',
   SetWisdomFetchingBackendsPartial = 'setWisdomFetchingBackendsPartial',
   SetWisdomLoading = 'setWisdomLoading',
@@ -30,6 +31,9 @@ export enum Actions {
 
 export const setWisdomExpanded = (isExpanded: boolean) =>
   action(Actions.SetWisdomExpanded, { isExpanded });
+
+export const setWisdomHideAdvancedTab = (hideAdvancedTab: boolean) =>
+  action(Actions.SetWisdomHideAdvancedTab, { hideAdvancedTab });
 
 export const setWisdomFetchingBackends = (isFetchingBackends: boolean) =>
   action(Actions.SetWisdomFetchingBackends, { isFetchingBackends });
@@ -87,6 +91,7 @@ export const setCurrentEditorYaml = (yaml: string | undefined) =>
 
 const actions = {
   setWisdomExpanded,
+  setWisdomHideAdvancedTab,
   setWisdomFetchingBackends,
   setWisdomFetchingBackendsPartial,
   setWisdomLoading,
@@ -124,10 +129,15 @@ export const initializeWisdom = (): ThunkAction<void, RootState, unknown, AnyAct
       }
       dispatch(setWisdomFetchingBackendsPartial(false));
       dispatch(setWisdomFetchingBackends(true));
-      await getAllWisdomBackends((w: WisdomBackendForRedux) => {
-        dispatch(setWisdomBackend(w));
-        dispatch(setWisdomFetchingBackendsPartial(true));
-      });
+      await getAllWisdomBackends(
+        (w: WisdomBackendForRedux) => {
+          dispatch(setWisdomBackend(w));
+          dispatch(setWisdomFetchingBackendsPartial(true));
+        },
+        (hideAdvancedTab: boolean) => {
+          dispatch(setWisdomHideAdvancedTab(hideAdvancedTab));
+        },
+      );
       dispatch(setWisdomFetchingBackends(false));
     } catch (e) {
       console.error('failed to initialize wisdom', e);

@@ -305,6 +305,7 @@ export type WisdomBackend = {
 
 export type WisdomKind = {
   spec: {
+    hideAdvancedTab?: boolean;
     backends: Array<WisdomBackend>;
   };
 } & K8sResourceCommon;

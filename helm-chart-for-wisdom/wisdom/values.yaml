@@ -1,5 +1,10 @@
+hideAdvancedTab: true
 backends:
   - name: Local
     discoveryEndpoint: http://localhost:10000/api/v1/discovery
     auth:
       secretName: wisdom-for-localhost-secret
+  - name: Red Hat Assistant
+    discoveryEndpoint: https://rhassistant-rhassistant.apps.os1.zurich.ibm.com/api/v1/discovery
+    auth:
+      secretName: wisdom-for-rhassistant-secret

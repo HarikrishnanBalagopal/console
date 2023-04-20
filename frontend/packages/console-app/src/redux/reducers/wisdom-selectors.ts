@@ -6,6 +6,9 @@ export const wisdomReducerName = 'wisdom';
 export const isWisdomExpanded = (state: RootState): boolean =>
   !!state.plugins?.console?.[wisdomReducerName]?.isExpanded;
 
+export const isWisdomHideAdvancedTab = (state: RootState): boolean =>
+  !!state.plugins?.console?.[wisdomReducerName]?.hideAdvancedTab;
+
 export const isWisdomFetchingBackends = (state: RootState): boolean =>
   !!state.plugins?.console?.[wisdomReducerName]?.isFetchingBackends;
 

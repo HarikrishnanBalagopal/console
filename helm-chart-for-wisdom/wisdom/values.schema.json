@@ -6,6 +6,10 @@
         "backends"
     ],
     "properties": {
+        "hideAdvancedTab": {
+            "type": "boolean",
+            "description": "Hides the advanced tab in the Wisdom assistant sidebar"
+        },
         "backends": {
             "type": "array",
             "description": "An array of wisdom backends",

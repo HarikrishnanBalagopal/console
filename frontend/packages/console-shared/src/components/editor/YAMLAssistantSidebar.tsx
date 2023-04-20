@@ -29,8 +29,8 @@ type WidsdomJobDataType = {
 const WisdomForOCPBody: WidsdomJobDataType = {
   mode: 'synchronous',
   task_id: '3',
-  model_id:
-    'L3Byb2plY3RzL2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duLzVlNi0yMGVwb2Nocy9jaGVja3BvaW50LTkwMzky',
+  model_id: 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9ibG9vbXpfMWI3X2FsbC9jaGVja3BvaW50LTQxMDAw',
+  // 'L3Byb2plY3RzL2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duLzVlNi0yMGVwb2Nocy9jaGVja3BvaW50LTkwMzky',
   prompt: '',
 };
 
@@ -178,7 +178,14 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
           }
           const { task_output } = data;
           if (task_output) {
-            setPreviewEdits(task_output.replace(/^[`\s]+|[`\s]+$/g, ''));
+            console.log('DEBUG >>>>>>>>>>>>>>>>> task_output', task_output);
+            const justYaml = task_output.match(/^```[a-zA-Z0-9- ]*\n((.|\n)*)```$/);
+            if (justYaml && justYaml.length >= 2) {
+              console.log('DEBUG matched regex');
+              setPreviewEdits(justYaml[1]);
+            } else {
+              setPreviewEdits(task_output.replace(/^[`\s]+|[`\s]+$/g, ''));
+            }
           } else {
             setPending(false);
           }

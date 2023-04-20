@@ -493,7 +493,7 @@ export const RouteModel: K8sKind = {
 
 export const WisdomModel: K8sKind = {
   apiGroup: 'console.openshift.io',
-  apiVersion: 'v1alpha2',
+  apiVersion: 'v1alpha3',
   label: 'Wisdom',
   // t('public~Wisdom')
   labelKey: 'public~Wisdom',

@@ -4,6 +4,7 @@ import { WisdomActions, Actions } from '../actions/wisdom-actions';
 
 type State = {
   isExpanded: boolean;
+  hideAdvancedTab: boolean;
   isFetchingBackends: boolean;
   isFetchingBackendsPartial: boolean;
   isLoading: boolean;
@@ -26,6 +27,7 @@ type State = {
 
 const initialState: State = {
   isExpanded: false,
+  hideAdvancedTab: false,
   isFetchingBackends: false,
   isFetchingBackendsPartial: false,
   isLoading: false,
@@ -52,6 +54,11 @@ export default (state = initialState, action: WisdomActions): State => {
       return {
         ...state,
         isExpanded: action.payload.isExpanded,
+      };
+    case Actions.SetWisdomHideAdvancedTab:
+      return {
+        ...state,
+        hideAdvancedTab: action.payload.hideAdvancedTab,
       };
     case Actions.SetWisdomFetchingBackends:
       return {

@@ -4,7 +4,7 @@ import { WisdomModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { WisdomAuthCreds, WisdomAnswer, DiscoveryAnswer, WisdomBackendForRedux, AsyncWisdomAnswerJobId } from './wisdom-types';
 
-export const WISDOM_VERSION = 'v1.150';
+export const WISDOM_VERSION = 'v1.154';
 const DEFAULT_NAMESPACE = 'default';
 const WISDOM_EMAIL = 'wisdom-email';
 const WISDOM_TOKEN = 'wisdom-token';
@@ -13,9 +13,11 @@ const WISDOM_MAX_POLL_SLEEP_MS = 3000;
 export const WISDOM_ENDPOINT = 'http://localhost:10000/api/v1/jobs';
 export const WISDOM_TASK_MODE = 'asynchronous';
 // TODO: temporarily hardcode a default model
-export const DEFAULT_WISDOM_MODEL_ID = 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9jaGVja3BvaW50LTk0MzI4';
+// export const DEFAULT_WISDOM_MODEL_ID = 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9jaGVja3BvaW50LTk0MzI4';
+export const DEFAULT_WISDOM_MODEL_ID = 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9ibG9vbXpfMWI3X2FsbC9jaGVja3BvaW50LTQxMDAw';
 // TODO: temporarily hardcode a default model task
-export const DEFAULT_WISDOM_TASK_TITLE = 'NL to Answer generation';
+// export const DEFAULT_WISDOM_TASK_TITLE = 'NL to Answer generation';
+export const DEFAULT_WISDOM_TASK_TITLE = 'NL to YAML generation';
 
 export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export const checkWisdomAvailable = () => new Promise((resolve) => resolve(true)); // DEBUG: TODO fix this
@@ -172,7 +174,7 @@ export const postFeedbackToWisdomApi = async (
   }
 };
 
-export const getAllWisdomBackends = async (addANewBackend: (w: WisdomBackendForRedux) => void): Promise<void> => {
+export const getAllWisdomBackends = async (addANewBackend: (w: WisdomBackendForRedux) => void, setHideAdvancedTab: (x: boolean) => void): Promise<void> => {
   console.log('fetching data about wisdom backends');
   try {
     const allWisdomObjects = await getAllObjectsOfWisdomKind();
@@ -182,6 +184,8 @@ export const getAllWisdomBackends = async (addANewBackend: (w: WisdomBackendForR
     }
     const wisdomObject = allWisdomObjects.items[0];
     console.log('wisdomObject', wisdomObject, 'name', wisdomObject.metadata?.name, 'backends', wisdomObject.spec.backends);
+    console.log('DEBUG !!!!!!!!!!!!!!!! wisdomObject.spec.hideAdvancedTab', wisdomObject.spec.hideAdvancedTab);
+    if (wisdomObject.spec.hideAdvancedTab !== undefined) setHideAdvancedTab(Boolean(wisdomObject.spec.hideAdvancedTab));
     // const promises = wisdomObject.spec.backends.map(getSingleWisdomBackend);
     // const results = await Promise.allSettled(promises);
     // const finalBackends: Array<WisdomBackendForRedux> = results
