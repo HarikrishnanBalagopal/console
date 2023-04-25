@@ -46,8 +46,8 @@ import { findOwner } from '../module/k8s/managed-by';
 import { ClusterServiceVersionModel } from '@console/operator-lifecycle-manager/src/models';
 import { definitionFor } from '../module/k8s/swagger';
 import { ImportYAMLResults } from './import-yaml-results';
-import { selectWisdomYaml, selectWisdomYamlAppend } from '@console/app/src/redux/reducers/wisdom-selectors';
-import { setCurrentEditorYaml, setWisdomYaml } from '@console/app/src/redux/actions/wisdom-actions';
+import { selectAssistantYaml, selectAssistantYamlAppend } from '@console/app/src/redux/reducers/assistant-selectors';
+import { setCurrentEditorYaml, setAssistantYaml } from '@console/app/src/redux/actions/assistant-actions';
 import YAMLAssistantSidebar from '@console/shared/src/components/editor/YAMLAssistantSidebar';
 
 const generateObjToLoad = (templateExtensions, kind, id, yaml, namespace = 'default') => {
@@ -59,15 +59,15 @@ const generateObjToLoad = (templateExtensions, kind, id, yaml, namespace = 'defa
 };
 
 const stateToProps = (state) => ({
-  wisdomYaml: selectWisdomYaml(state),
-  wisdomYamlAppend: selectWisdomYamlAppend(state),
+  assistantYaml: selectAssistantYaml(state),
+  assistantYamlAppend: selectAssistantYamlAppend(state),
   activeNamespace: state.UI.get('activeNamespace'),
   impersonate: getImpersonate(state),
   models: state.k8s.getIn(['RESOURCES', 'models']),
 });
 
 const dispatchToProps = (dispatch) => ({
-  'setWisdomYaml': (yaml, isAppend) => dispatch(setWisdomYaml(yaml, isAppend)),
+  'setAssistantYaml': (yaml, isAppend) => dispatch(setAssistantYaml(yaml, isAppend)),
   'setEditorYaml': (yaml) => dispatch(setCurrentEditorYaml(yaml)),
 });
 
@@ -215,14 +215,14 @@ export const EditYAML_ = connect(stateToProps, dispatchToProps)(
         }
 
         setInitialValue() {
-          if (!this.state.initialized || !this.props.wisdomYaml) return;
-          console.log('this.props.wisdomYamlAppend', this.props.wisdomYamlAppend);
-          if (this.props.wisdomYamlAppend) {
-            this.loadYaml(true, this.props.wisdomYaml);
+          if (!this.state.initialized || !this.props.assistantYaml) return;
+          // console.log('this.props.assistantYamlAppend', this.props.assistantYamlAppend);
+          if (this.props.assistantYamlAppend) {
+            this.loadYaml(true, this.props.assistantYaml);
           } else {
-            this.loadYamlString(true, this.props.wisdomYaml);
+            this.loadYamlString(true, this.props.assistantYaml);
           }
-          this.props.setWisdomYaml(undefined, false);
+          this.props.setAssistantYaml(undefined, false);
         }
 
         UNSAFE_componentWillReceiveProps(nextProps) {
@@ -647,8 +647,7 @@ export const EditYAML_ = connect(stateToProps, dispatchToProps)(
           const klass = classNames('co-file-dropzone-container', {
             'co-file-dropzone--drop-over': isOver,
           });
-          const onChangeWithWisdomHook = (newValue, event) => {
-            // console.log('onChangeWithWisdomHook --------------------- newValue', newValue, 'event', event);
+          const onChangeWithAssistantHook = (newValue, event) => {
             setEditorYaml(newValue);
             onChange(newValue, event);
           };
@@ -748,7 +747,7 @@ export const EditYAML_ = connect(stateToProps, dispatchToProps)(
                         showShortcuts={!genericYAML}
                         minHeight="100px"
                         toolbarLinks={sidebarLink || assistantLink ? [sidebarLink, assistantLink] : []}
-                        onChange={onChangeWithWisdomHook}
+                        onChange={onChangeWithAssistantHook}
                         onSave={() => (allowMultiple ? this.saveAll() : this.save())}
                       />
                       <div className="yaml-editor__buttons" ref={(r) => (this.buttons = r)}>
@@ -844,7 +843,7 @@ export const EditYAML_ = connect(stateToProps, dispatchToProps)(
                   )}
                   {showAssistant && (
                     <YAMLAssistantSidebar
-                      sidebarLabel={t('public~Wisdom Assistant')}
+                      sidebarLabel={t('public~Assistant')}
                       editorRef={this.monacoRef}
                       toggleSidebar={this.toggleAssistant}
                     />

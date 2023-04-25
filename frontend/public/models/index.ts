@@ -491,20 +491,20 @@ export const RouteModel: K8sKind = {
   id: 'route',
 };
 
-export const WisdomModel: K8sKind = {
+export const AssistantModel: K8sKind = {
   apiGroup: 'console.openshift.io',
-  apiVersion: 'v1alpha3',
-  label: 'Wisdom',
-  // t('public~Wisdom')
-  labelKey: 'public~Wisdom',
-  plural: 'wisdoms',
+  apiVersion: 'v1alpha4',
+  label: 'Assistant',
+  // t('public~Assistant')
+  labelKey: 'public~Assistant',
+  plural: 'assistants',
   abbr: 'WIS',
   namespaced: true,
-  kind: 'Wisdom',
-  id: 'wisdom',
-  labelPlural: 'Wisdoms',
-  // t('public~Wisdoms')
-  labelPluralKey: 'public~Wisdoms',
+  kind: 'Assistant',
+  id: 'assistant',
+  labelPlural: 'Assistants',
+  // t('public~Assistants')
+  labelPluralKey: 'public~Assistants',
 };
 
 export const ConfigMapModel: K8sKind = {

@@ -2,13 +2,13 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   # name must match the spec fields below, and be in the form: <plural>.<group>
-  name: wisdoms.console.openshift.io
+  name: assistants.console.openshift.io
 spec:
   # group name to use for REST API: /apis/<group>/<version>
   group: console.openshift.io
   # list of versions supported by this CustomResourceDefinition
   versions:
-    - name: v1alpha3
+    - name: v1alpha4
       # Each version can be enabled/disabled by Served flag.
       served: true
       # One and only one version must be marked as the storage version.
@@ -22,9 +22,54 @@ spec:
               required:
                 - backends
               properties:
+                maxPollAttempts:
+                  type: integer
+                  description: 'maximum number of attempts to the Assistant backend to get the answer for a query'
+                  default: 60
+                timeBetweenPollAttempts:
+                  type: integer
+                  description: 'milliseconds to sleep between attempts to the Assistant backend to get the answer for a query'
+                  default: 3000
                 hideAdvancedTab:
                   type: boolean
-                  description: 'hides the advanced tab in the Wisdom Assistant sidebar'
+                  description: 'hides the advanced tab in the Assistant sidebar'
+                  default: false
+                backends:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - discoveryEndpoint
+                    properties:
+                      name:
+                        type: string
+                      discoveryEndpoint:
+                        type: string
+                      auth:
+                        type: object
+                        required:
+                          - secretName
+                        properties:
+                          secretName:
+                            type: string
+    - name: v1alpha3
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: false
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - backends
+              properties:
+                hideAdvancedTab:
+                  type: boolean
+                  description: 'hides the advanced tab in the Assistant sidebar'
                   default: false
                 backends:
                   type: array
@@ -47,7 +92,7 @@ spec:
                             type: string
     - name: v1alpha2
       # Each version can be enabled/disabled by Served flag.
-      served: true
+      served: false
       # One and only one version must be marked as the storage version.
       storage: false
       schema:
@@ -111,8 +156,8 @@ spec:
   scope: Namespaced
   names:
     # plural name to be used in the URL: /apis/<group>/<version>/<plural>
-    plural: wisdoms
+    plural: assistants
     # singular name to be used as an alias on the CLI and for display
-    singular: wisdom
+    singular: assistant
     # kind is normally the CamelCased singular type. Your resource manifests use this.
-    kind: Wisdom
+    kind: Assistant

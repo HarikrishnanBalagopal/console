@@ -1,6 +1,6 @@
-import { WisdomAllBackends, WisdomAnswer } from '../../components/wisdom/wisdom-types';
-import { DEFAULT_WISDOM_MODEL_ID, DEFAULT_WISDOM_TASK_TITLE } from '../../components/wisdom/wisdom-utils';
-import { WisdomActions, Actions } from '../actions/wisdom-actions';
+import { AssistantAllBackends, AssistantAnswer } from '../../components/assistant/assistant-types';
+import { ASSISTANT_DEFAULT_MODEL_ID, ASSISTANT_DEFAULT_TASK_TITLE } from '../../components/assistant/assistant-utils';
+import { AssistantActions, Actions } from '../actions/assistant-actions';
 
 type State = {
   isExpanded: boolean;
@@ -12,11 +12,11 @@ type State = {
   fetchingBackendsError: string | undefined;
   error: string | undefined;
   feedbackError: string | undefined;
-  answer: WisdomAnswer | undefined;
+  answer: AssistantAnswer | undefined;
   yaml: string | undefined;
   yamlIsAppend: boolean;
   command: string | undefined;
-  allBackends: WisdomAllBackends;
+  allBackends: AssistantAllBackends;
   currentBackendId: string | undefined;
   currentModelId: string | undefined;
   currentTaskId: string | undefined;
@@ -48,65 +48,65 @@ const initialState: State = {
   allBackends: {},
 };
 
-export default (state = initialState, action: WisdomActions): State => {
+export default (state = initialState, action: AssistantActions): State => {
   switch (action.type) {
-    case Actions.SetWisdomExpanded:
+    case Actions.SetAssistantExpanded:
       return {
         ...state,
         isExpanded: action.payload.isExpanded,
       };
-    case Actions.SetWisdomHideAdvancedTab:
+    case Actions.SetAssistantHideAdvancedTab:
       return {
         ...state,
         hideAdvancedTab: action.payload.hideAdvancedTab,
       };
-    case Actions.SetWisdomFetchingBackends:
+    case Actions.SetAssistantFetchingBackends:
       return {
         ...state,
         isFetchingBackends: action.payload.isFetchingBackends,
       };
-    case Actions.SetWisdomFetchingBackendsPartial:
+    case Actions.SetAssistantFetchingBackendsPartial:
       return {
         ...state,
         isFetchingBackendsPartial: action.payload.isFetchingBackendsPartial,
       };
-    case Actions.SetWisdomLoading:
+    case Actions.SetAssistantLoading:
       return {
         ...state,
         isLoading: action.payload.isLoading,
       };
-    case Actions.SetWisdomSendingFeedback:
+    case Actions.SetAssistantSendingFeedback:
       return {
         ...state,
         isSendingFeedback: action.payload.sendingFeedback,
       };
-    case Actions.SetWisdomFetchingBackendsError:
+    case Actions.SetAssistantFetchingBackendsError:
       return {
         ...state,
         fetchingBackendsError: action.payload.fetchingBackendsError,
       };
-    case Actions.SetWisdomError:
+    case Actions.SetAssistantError:
       return {
         ...state,
         error: action.payload.error,
       };
-    case Actions.SetWisdomFeedbackError:
+    case Actions.SetAssistantFeedbackError:
       return {
         ...state,
         feedbackError: action.payload.feedbackError,
       };
-    case Actions.SetWisdomAnswer:
+    case Actions.SetAssistantAnswer:
       return {
         ...state,
         answer: action.payload.answer,
       };
-    case Actions.SetWisdomYaml:
+    case Actions.SetAssistantYaml:
       return {
         ...state,
         yaml: action.payload.yaml,
         yamlIsAppend: action.payload.isAppend,
       };
-    case Actions.SetWisdomCommand:
+    case Actions.SetAssistantCommand:
       return {
         ...state,
         command: action.payload.command,
@@ -116,17 +116,17 @@ export default (state = initialState, action: WisdomActions): State => {
         ...state,
         currentEditorYaml: action.payload.yaml,
       };
-    case Actions.SetWisdomCurrentJobId:
+    case Actions.SetAssistantCurrentJobId:
       return {
         ...state,
         currentJobId: action.payload.jobId,
       };
-    case Actions.SetWisdomCurrentJobProgress:
+    case Actions.SetAssistantCurrentJobProgress:
       return {
         ...state,
         currentJobProgress: action.payload.jobProgress,
       };
-    case Actions.SetWisdomCurrentBackendId: {
+    case Actions.SetAssistantCurrentBackendId: {
       const currentBackendId = action.payload.backendId;
       const currentBackend = state.allBackends[currentBackendId];
       let currentModel = currentBackend?.discoveryAnswer.model_data[0];
@@ -134,7 +134,7 @@ export default (state = initialState, action: WisdomActions): State => {
         // TODO: temporarily hardcode a default model
         if (currentModel) {
           const ms = currentBackend?.discoveryAnswer.model_data ?? [];
-          const found = ms.find(m => m.model_id === DEFAULT_WISDOM_MODEL_ID);
+          const found = ms.find(m => m.model_id === ASSISTANT_DEFAULT_MODEL_ID);
           if (found) {
             currentModel = found;
           }
@@ -146,7 +146,7 @@ export default (state = initialState, action: WisdomActions): State => {
         // TODO: temporarily hardcode a default model task
         if (currentTaskIdNum) {
           const ms = currentModel?.tasks ?? [];
-          const found = ms.find(m => m.taskTitle === DEFAULT_WISDOM_TASK_TITLE);
+          const found = ms.find(m => m.taskTitle === ASSISTANT_DEFAULT_TASK_TITLE);
           if (found) {
             currentTaskIdNum = found.taskId;
           }
@@ -160,7 +160,7 @@ export default (state = initialState, action: WisdomActions): State => {
         currentTaskId,
       };
     }
-    case Actions.SetWisdomCurrentModelId: {
+    case Actions.SetAssistantCurrentModelId: {
       if (state.currentBackendId === undefined) {
         return state;
       }
@@ -172,7 +172,7 @@ export default (state = initialState, action: WisdomActions): State => {
         // TODO: temporarily hardcode a default model task
         if (currentTaskIdNum) {
           const ms = currentModel?.tasks ?? [];
-          const found = ms.find(m => m.taskTitle === DEFAULT_WISDOM_TASK_TITLE);
+          const found = ms.find(m => m.taskTitle === ASSISTANT_DEFAULT_TASK_TITLE);
           if (found) {
             currentTaskIdNum = found.taskId;
           }
@@ -185,7 +185,7 @@ export default (state = initialState, action: WisdomActions): State => {
         currentTaskId,
       };
     }
-    case Actions.SetWisdomCurrentTaskId: {
+    case Actions.SetAssistantCurrentTaskId: {
       if (state.currentBackendId === undefined || state.currentModelId === undefined) {
         return state;
       }
@@ -199,7 +199,7 @@ export default (state = initialState, action: WisdomActions): State => {
         currentTaskId,
       };
     }
-    case Actions.SetWisdomBackend: {
+    case Actions.SetAssistantBackend: {
       if (Object.keys(state.allBackends).length > 0) {
         return {
           ...state,
@@ -217,7 +217,7 @@ export default (state = initialState, action: WisdomActions): State => {
         // TODO: temporarily hardcode a default model
         if (currentModel) {
           const ms = currentBackend?.discoveryAnswer.model_data ?? [];
-          const found = ms.find(m => m.model_id === DEFAULT_WISDOM_MODEL_ID);
+          const found = ms.find(m => m.model_id === ASSISTANT_DEFAULT_MODEL_ID);
           if (found) {
             currentModel = found;
           }
@@ -229,7 +229,7 @@ export default (state = initialState, action: WisdomActions): State => {
         // TODO: temporarily hardcode a default model task
         if (currentTaskIdNum) {
           const ms = currentModel?.tasks ?? [];
-          const found = ms.find(m => m.taskTitle === DEFAULT_WISDOM_TASK_TITLE);
+          const found = ms.find(m => m.taskTitle === ASSISTANT_DEFAULT_TASK_TITLE);
           if (found) {
             currentTaskIdNum = found.taskId;
           }
@@ -248,7 +248,7 @@ export default (state = initialState, action: WisdomActions): State => {
         currentTaskId,
       };
     }
-    case Actions.SetWisdomAllBackends: {
+    case Actions.SetAssistantAllBackends: {
       const arr = Object.values(action.payload.allBackends);
       const currentBackendId = arr[0]?.id;
       const currentBackend = state.allBackends[currentBackendId];

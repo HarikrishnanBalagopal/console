@@ -1,8 +1,0 @@
-apiVersion: console.openshift.io/v1alpha3
-kind: Wisdom
-metadata:
-  name: wisdom-config
-spec:
-  hideAdvancedTab: {{ .Values.hideAdvancedTab }}
-  backends:
-{{ toYaml .Values.backends | indent 4 }}

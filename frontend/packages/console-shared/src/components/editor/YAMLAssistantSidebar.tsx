@@ -26,7 +26,7 @@ type WidsdomJobDataType = {
   task_id: string;
 };
 
-const WisdomForOCPBody: WidsdomJobDataType = {
+const AssistantForOCPBody: WidsdomJobDataType = {
   mode: 'synchronous',
   task_id: '3',
   model_id: 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9ibG9vbXpfMWI3X2FsbC9jaGVja3BvaW50LTQxMDAw',
@@ -49,9 +49,9 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
   const [pending, setPending] = React.useState<boolean>();
   const [entry, setEntry] = React.useState<string>();
   const [previewEdits, setPreviewEdits] = React.useState<string>();
-  const [wisdomEndpoint, setWisdomEndpoint] = React.useState<string>();
-  const [wisdomAPIKey, setWisdomAPIKey] = React.useState<string>();
-  const [wisdomAPIEmail, setWisdomAPIEmail] = React.useState<string>();
+  const [assistantEndpoint, setAssistantEndpoint] = React.useState<string>();
+  const [assistantAPIKey, setAssistantAPIKey] = React.useState<string>();
+  const [assistantAPIEmail, setAssistantAPIEmail] = React.useState<string>();
   const [completionError, setCompletionError] = React.useState<string | undefined>();
   const theme = React.useContext(ThemeContext);
   const editor = editorRef.current?.editor;
@@ -68,23 +68,23 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
   React.useEffect(() => {
     let ignore = false;
 
-    const getWisdomApiKey = async () => {
+    const getAssistantApiKey = async () => {
       let secret: K8sResourceKind;
       try {
-        secret = await k8sGet(SecretModel, 'wisdom-api', 'openshift-config', null);
+        secret = await k8sGet(SecretModel, 'assistant-api-secret', 'openshift-config', null);
       } catch (e) {
-        setCompletionError('Unable to find Wisdom API key');
+        setCompletionError('failed to find the assistant API key');
         return;
       }
       if (ignore) return;
 
       if (secret) {
-        setWisdomAPIKey(Base64.decode(secret.data?.apiKey));
-        setWisdomAPIEmail(Base64.decode(secret.data?.email));
+        setAssistantAPIKey(Base64.decode(secret.data?.apiKey));
+        setAssistantAPIEmail(Base64.decode(secret.data?.email));
       }
     };
 
-    getWisdomApiKey();
+    getAssistantApiKey();
 
     return () => {
       ignore = true;
@@ -96,16 +96,16 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
 
     k8sGetResource<ConfigMapKind>({
       model: ConfigMapModel,
-      name: 'wisdom-api-endpoint',
+      name: 'assistant-api-configmap',
       ns: 'openshift-config',
     })
       .then((configMap) => {
         if (!ignore && configMap) {
-          setWisdomEndpoint(configMap.data?.endpoint);
+          setAssistantEndpoint(configMap.data?.endpoint);
         }
       })
       .catch(() => {
-        setCompletionError('Unable to Wisdom Endpoint');
+        setCompletionError('failed to get the assistant endpoint');
       });
 
     return () => {
@@ -147,9 +147,9 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
     const currentValue = editor.getValue();
     const currentEntry = currentValue ? `\`\`\`\n${currentValue}\n\`\`\`\n` : '';
 
-    const URL = `${wisdomEndpoint}/${OPEN_API_COMPLETIONS_URL}`;
+    const URL = `${assistantEndpoint}/${OPEN_API_COMPLETIONS_URL}`;
     const body = {
-      ...WisdomForOCPBody,
+      ...AssistantForOCPBody,
       prompt: `${currentEntry}${entry || transcriptRef.current}`,
     };
 
@@ -158,8 +158,8 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        Authorization: `Bearer ${wisdomAPIKey}`,
-        Email: `${wisdomAPIEmail}`,
+        Authorization: `Bearer ${assistantAPIKey}`,
+        Email: `${assistantAPIEmail}`,
       },
       body: JSON.stringify(body),
     };
@@ -178,10 +178,8 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
           }
           const { task_output } = data;
           if (task_output) {
-            console.log('DEBUG >>>>>>>>>>>>>>>>> task_output', task_output);
             const justYaml = task_output.match(/^```[a-zA-Z0-9- ]*\n((.|\n)*)```$/);
             if (justYaml && justYaml.length >= 2) {
-              console.log('DEBUG matched regex');
               setPreviewEdits(justYaml[1]);
             } else {
               setPreviewEdits(task_output.replace(/^[`\s]+|[`\s]+$/g, ''));
@@ -195,7 +193,7 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
         setPending(false);
         setCompletionError(error.message);
       });
-  }, [editor, entry, wisdomAPIEmail, wisdomAPIKey, wisdomEndpoint]);
+  }, [editor, entry, assistantAPIEmail, assistantAPIKey, assistantEndpoint]);
 
   React.useEffect(() => {
     if (listening && transcript && transcript !== transcriptRef.current) {

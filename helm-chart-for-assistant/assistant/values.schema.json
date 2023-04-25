@@ -8,14 +8,14 @@
     "properties": {
         "hideAdvancedTab": {
             "type": "boolean",
-            "description": "Hides the advanced tab in the Wisdom assistant sidebar"
+            "description": "Hides the advanced tab in the Assistant sidebar"
         },
         "backends": {
             "type": "array",
-            "description": "An array of wisdom backends",
+            "description": "An array of Assistant backends",
             "items": {
                 "type": "object",
-                "description": "A wisdom backend",
+                "description": "An Assistant backend",
                 "required": [
                     "name",
                     "discoveryEndpoint"
@@ -31,7 +31,7 @@
                     },
                     "auth": {
                         "type": "object",
-                        "description": "Use if the Wisdom backend requires authentication",
+                        "description": "Use if the Assistant backend requires authentication",
                         "required": [
                             "secretName"
                         ],

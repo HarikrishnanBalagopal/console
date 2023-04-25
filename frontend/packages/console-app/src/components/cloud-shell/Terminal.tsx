@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Terminal as XTerminal, ITerminalOptions, ITerminalAddon } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectWisdomCommand } from '../../redux/reducers/wisdom-selectors';
-import { setWisdomCommand } from '../../redux/actions/wisdom-actions';
+import { selectAssistantCommand } from '../../redux/reducers/assistant-selectors';
+import { setAssistantCommand } from '../../redux/actions/assistant-actions';
 
 import './Terminal.scss';
 
@@ -32,13 +32,13 @@ const Terminal = React.forwardRef<ImperativeTerminalType, TerminalProps>(
   ({ onData, onResize }, ref) => {
     const terminal = React.useRef<XTerminal>();
     const terminalRef = React.useRef<HTMLDivElement>();
-    const command = useSelector(selectWisdomCommand);
+    const command = useSelector(selectAssistantCommand);
     const dispatch = useDispatch();
-    const setCommand = React.useCallback((c: string) => dispatch(setWisdomCommand(c)), [dispatch, setWisdomCommand]);
+    const setCommand = React.useCallback((c: string) => dispatch(setAssistantCommand(c)), [dispatch, setAssistantCommand]);
 
-    React.useEffect(() => {
+    React.useEffect(()  => {
       console.log('Terminal useEffect start ------------------------------- command:', command);
-      if (!command) return;
+      if (!command) return undefined;
       let mounted = true;
       const pasteToTerminal = () => {
         if (!mounted) return;
@@ -46,7 +46,7 @@ const Terminal = React.forwardRef<ImperativeTerminalType, TerminalProps>(
           window.setTimeout(pasteToTerminal, 500);
           return;
         }
-        console.log('copy pasting the wisdom command to terminal:', command);
+        console.log('copy pasting the command from the assistant to the terminal:', command);
         setCommand('');
         onData(command);
       };

@@ -1,0 +1,10 @@
+apiVersion: console.openshift.io/v1alpha4
+kind: Assistant
+metadata:
+  name: assistant-config
+spec:
+  {{- if .Values.hideAdvancedTab }}
+  hideAdvancedTab: {{ .Values.hideAdvancedTab }}
+  {{- end }}
+  backends:
+{{ toYaml .Values.backends | indent 4 }}

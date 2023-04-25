@@ -36,40 +36,40 @@ import { RootState } from '@console/internal/redux';
 import { formatNamespacedRouteForResource } from '@console/shared/src/utils';
 import ReactDiffViewer from 'react-diff-viewer';
 import {
-  sendFeedbackToWisdom, sendQueryToWisdom, setWisdomCommand, setWisdomCurrentBackendId,
-  setWisdomCurrentModelId, setWisdomCurrentTaskId, setWisdomYaml
-} from '../../redux/actions/wisdom-actions';
+  sendFeedbackToAssistant, sendQueryToAssistant, setAssistantCommand, setAssistantCurrentBackendId,
+  setAssistantCurrentModelId, setAssistantCurrentTaskId, setAssistantYaml,
+} from '../../redux/actions/assistant-actions';
 import {
-  isWisdomHideAdvancedTab,
-  isWisdomLoading,
-  isWisdomSendingFeedback,
-  selectWisdomAllBackends,
-  selectWisdomAnswer,
-  selectWisdomCurrentBackendId,
-  selectWisdomCurrentEditorYaml,
-  selectWisdomCurrentJobProgress,
-  selectWisdomCurrentModelId,
-  selectWisdomCurrentTaskId,
-  selectWisdomError,
-  selectWisdomFeedbackError,
-} from '../../redux/reducers/wisdom-selectors';
+  isAssistantHideAdvancedTab,
+  isAssistantLoading,
+  isAssistantSendingFeedback,
+  selectAssistantAllBackends,
+  selectAssistantAnswer,
+  selectAssistantCurrentBackendId,
+  selectAssistantCurrentEditorYaml,
+  selectAssistantCurrentJobProgress,
+  selectAssistantCurrentModelId,
+  selectAssistantCurrentTaskId,
+  selectAssistantError,
+  selectAssistantFeedbackError,
+} from '../../redux/reducers/assistant-selectors';
 import useCloudShellAvailable from '../cloud-shell/useCloudShellAvailable';
 import { toggleCloudShellExpanded } from '../../redux/actions/cloud-shell-actions';
 import { isCloudShellExpanded } from '../../redux/reducers/cloud-shell-selectors';
-import { WisdomAllBackends, WisdomAnswer, WisdomModel, WisdomModelTask } from './wisdom-types';
-import { WISDOM_VERSION } from './wisdom-utils';
+import { AssistantAllBackends, AssistantAnswer, AssistantModel, AssistantModelTask } from './assistant-types';
+import { ASSISTANT_VERSION } from './assistant-utils';
 
-import './WisdomSidebar.scss';
+import './AssistantSidebar.scss';
 
 type StateProps = {
   activeNamespace: string;
-  data?: WisdomAnswer;
+  data?: AssistantAnswer;
   isLoading?: boolean;
   isSendingFeedback?: boolean;
   error?: string;
   feedbackError?: string;
   isCloudShellOpen?: boolean;
-  allBackends: WisdomAllBackends;
+  allBackends: AssistantAllBackends;
   currentBackendId?: string;
   currentModelId?: string;
   currentTaskId?: string;
@@ -89,7 +89,7 @@ type DispatchProps = {
   setBackendModelTask: (id: string) => void;
 };
 
-export type WisdomSidebarProps = {
+export type AssistantSidebarProps = {
   onClose: () => void;
 } & StateProps & DispatchProps;
 
@@ -112,7 +112,7 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
   // console.log('newCode', newCode);
   const [isDiffOpen, setIsDiffOpen] = React.useState(false);
   return (
-    <div className="wisdom-code-block-wrapper margin-top-bottom-1em">
+    <div className="assistant-code-block-wrapper margin-top-bottom-1em">
       {isDiffOpen ? (
         <>
           <ReactDiffViewer oldValue={oldCode ?? ''} newValue={newCode} splitView={false} useDarkTheme={true} showDiffOnly={true} />
@@ -131,7 +131,7 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
           <SyntaxHighlighter style={xonokai} language={language} {...props}>
             {children}
           </SyntaxHighlighter>
-          <Stack className="wisdom-code-block-corner-buttons">
+          <Stack className="assistant-code-block-corner-buttons">
             {language === 'yaml' && oldCode && (
               <StackItem>
                 <Button
@@ -163,7 +163,7 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
   );
 };
 
-const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
+const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   activeNamespace,
   data,
   isLoading,
@@ -189,16 +189,10 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
   setBackendModelTask,
 }) => {
   const backendArray = Object.values(allBackends);
-  const currentBackendModels: Array<WisdomModel> = allBackends[currentBackendId]?.discoveryAnswer.model_data;
-  const currentBackendModelTasks: Array<WisdomModelTask> = currentBackendModels?.find(m => m.model_id === currentModelId)?.tasks;
-  const currentBackendModelTask: WisdomModelTask | undefined = currentBackendModelTasks?.find(t => String(t.taskId) === currentTaskId);
-  // console.log('DEBUG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-  // console.log('allBackends', allBackends);
-  // console.log('currentBackendModels', currentBackendModels);
-  // console.log('currentBackendModelTasks', currentBackendModelTasks);
-  // console.log('currentBackendId', currentBackendId);
-  // console.log('currentModelId', currentModelId);
-  // console.log('currentTaskId', currentTaskId);
+  const currentBackendModels: Array<AssistantModel> = allBackends[currentBackendId]?.discoveryAnswer.model_data;
+  const currentBackendModelTasks: Array<AssistantModelTask> = currentBackendModels?.find(m => m.model_id === currentModelId)?.tasks;
+  const currentBackendModelTask: AssistantModelTask | undefined = currentBackendModelTasks?.find(t => String(t.taskId) === currentTaskId);
+
   const [query, setQuery] = React.useState('');
   const [endpointSelectOpen, setEndpointSelectOpen] = React.useState(false);
   const [modelSelectOpen, setModelSelectOpen] = React.useState(false);
@@ -284,7 +278,7 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
 
   return (
     <NotificationDrawer translate='no' className="on-top-z-index-301">
-      <NotificationDrawerHeader title={"Wisdom Assistant " + WISDOM_VERSION}>
+      <NotificationDrawerHeader title={"Assistant " + ASSISTANT_VERSION}>
         <Button aria-label="close button" variant="link" onClick={onClose}>
           <TimesIcon />
         </Button>
@@ -305,7 +299,7 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
             {
               backendArray.length === 0 ? (
                 <div className='center-text'>
-                  <Spinner /> Fetching the list of Wisdom backends...
+                  <Spinner /> Fetching the list of Assistant backends...
                 </div>
               ) : hideAdvancedTab ? (
                 null
@@ -319,8 +313,8 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
                         onToggle={() => setEndpointSelectOpen(!endpointSelectOpen)}
                         selections={currentBackendId}
                         onSelect={(_, s) => { setBackend(s.toString()); setEndpointSelectOpen(false); }}
-                        name="wisdom-backend"
-                        aria-label="selected wisdom backend">
+                        name="assistant-backend"
+                        aria-label="selected assistant backend">
                         {backendArray.map((e) => <SelectOption key={e.id} value={e.id}>{e.id}</SelectOption>)}
                       </Select>
                     </FormGroup><br />
@@ -358,8 +352,8 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
                                     onToggle={() => setTaskSelectOpen(!taskSelectOpen)}
                                     selections={currentTaskId}
                                     onSelect={(_, s) => { setBackendModelTask(s.toString()); setTaskSelectOpen(false); }}
-                                    name="wisdom-task"
-                                    aria-label="selected wisdom task">
+                                    name="assistant-task"
+                                    aria-label="selected assistant task">
                                     {currentBackendModelTasks.map((e) => <SelectOption key={e.taskId} value={e.taskId}>{e.taskTitle}</SelectOption>)}
                                   </Select>
                                 </FormGroup><br />
@@ -372,8 +366,8 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
                                         onToggle={() => setTaskExampleSelectOpen(!taskExampleSelectOpen)}
                                         onSelect={(_, s) => { setQuery(s.toString()); setTaskExampleSelectOpen(false); }}
                                         placeholderText="Some example prompts you can try"
-                                        name="wisdom-task-example"
-                                        aria-label="example prompts for the selected wisdom task">
+                                        name="assistant-task-example"
+                                        aria-label="example prompts for the selected assistant task">
                                         {currentBackendModelTask.examples?.map((e, i) => <SelectOption key={i + 1} value={e.text}>{e.text}</SelectOption>)}
                                       </Select>
                                     </FormGroup>
@@ -469,30 +463,30 @@ const WisdomSidebar: React.FC<WisdomSidebarProps> = ({
 
 const stateToProps = (state: RootState): StateProps => ({
   activeNamespace: state.UI.get('activeNamespace', ALL_NAMESPACES),
-  data: selectWisdomAnswer(state),
-  isLoading: isWisdomLoading(state),
-  isSendingFeedback: isWisdomSendingFeedback(state),
-  error: selectWisdomError(state),
-  feedbackError: selectWisdomFeedbackError(state),
+  data: selectAssistantAnswer(state),
+  isLoading: isAssistantLoading(state),
+  isSendingFeedback: isAssistantSendingFeedback(state),
+  error: selectAssistantError(state),
+  feedbackError: selectAssistantFeedbackError(state),
   isCloudShellOpen: isCloudShellExpanded(state),
-  allBackends: selectWisdomAllBackends(state),
-  currentBackendId: selectWisdomCurrentBackendId(state),
-  currentModelId: selectWisdomCurrentModelId(state),
-  currentTaskId: selectWisdomCurrentTaskId(state),
-  currentJobProgress: selectWisdomCurrentJobProgress(state),
-  currentEditorYaml: selectWisdomCurrentEditorYaml(state),
-  hideAdvancedTab: isWisdomHideAdvancedTab(state),
+  allBackends: selectAssistantAllBackends(state),
+  currentBackendId: selectAssistantCurrentBackendId(state),
+  currentModelId: selectAssistantCurrentModelId(state),
+  currentTaskId: selectAssistantCurrentTaskId(state),
+  currentJobProgress: selectAssistantCurrentJobProgress(state),
+  currentEditorYaml: selectAssistantCurrentEditorYaml(state),
+  hideAdvancedTab: isAssistantHideAdvancedTab(state),
 });
 
 const dispatchToProps = (dispatch): DispatchProps => ({
-  sendQuery: (query) => dispatch(sendQueryToWisdom(query)),
-  sendFeedback: (good) => dispatch(sendFeedbackToWisdom(good)),
-  setYaml: (yaml, isAppend) => dispatch(setWisdomYaml(yaml, isAppend)),
-  setCommand: (command) => dispatch(setWisdomCommand(command)),
+  sendQuery: (query) => dispatch(sendQueryToAssistant(query)),
+  sendFeedback: (good) => dispatch(sendFeedbackToAssistant(good)),
+  setYaml: (yaml, isAppend) => dispatch(setAssistantYaml(yaml, isAppend)),
+  setCommand: (command) => dispatch(setAssistantCommand(command)),
   openCloudshell: () => dispatch(toggleCloudShellExpanded()),
-  setBackend: (id: string) => { console.log('setting backend to:', id); dispatch(setWisdomCurrentBackendId(id)); },
-  setBackendModel: (id: string) => { console.log('setting backend model to:', id); dispatch(setWisdomCurrentModelId(id)); },
-  setBackendModelTask: (id: string) => { console.log('setting backend model task to:', id); dispatch(setWisdomCurrentTaskId(id)); },
+  setBackend: (id: string) => { console.log('setting backend to:', id); dispatch(setAssistantCurrentBackendId(id)); },
+  setBackendModel: (id: string) => { console.log('setting backend model to:', id); dispatch(setAssistantCurrentModelId(id)); },
+  setBackendModelTask: (id: string) => { console.log('setting backend model task to:', id); dispatch(setAssistantCurrentTaskId(id)); },
 });
 
-export default connect<StateProps, DispatchProps>(stateToProps, dispatchToProps)(WisdomSidebar);
+export default connect<StateProps, DispatchProps>(stateToProps, dispatchToProps)(AssistantSidebar);

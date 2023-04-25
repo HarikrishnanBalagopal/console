@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { FLAGS, YellowExclamationTriangleIcon, ACM_LINK_ID } from '@console/shared';
 import { formatNamespacedRouteForResource } from '@console/shared/src/utils';
 import CloudShellMastheadButton from '@console/app/src/components/cloud-shell/CloudShellMastheadButton';
-import WisdomMastheadButton from '@console/app/src/components/wisdom/WisdomMastheadButton';
+import AssistantMastheadButton from '@console/app/src/components/assistant/AssistantMastheadButton';
 import CloudShellMastheadAction from '@console/app/src/components/cloud-shell/CloudShellMastheadAction';
 import isMultiClusterEnabled from '@console/app/src/utils/isMultiClusterEnabled';
 import { getUser } from '@console/dynamic-plugin-sdk';
@@ -629,14 +629,14 @@ class MastheadToolbarContents_ extends React.Component {
       showAboutModal,
       statuspageData,
     } = this.state;
-    const { consoleLinks, drawerToggle, canAccessNS, alertCount, t, onWisdomToggle, isWisdomOpen } = this.props;
+    const { consoleLinks, drawerToggle, canAccessNS, alertCount, t, onAssistantToggle, isAssistantOpen } = this.props;
     const launchActions = this._launchActions();
     const alertAccess = canAccessNS && !!window.SERVER_FLAGS.prometheusBaseURL;
     return (
       <>
         <PageHeaderTools>
           <PageHeaderToolsGroup className="hidden-xs">
-            <WisdomMastheadButton onWisdomToggle={onWisdomToggle} isWisdomOpen={isWisdomOpen}/>
+            <AssistantMastheadButton onAssistantToggle={onAssistantToggle} isAssistantOpen={isAssistantOpen}/>
             {/* desktop -- (system status button) */}
             <SystemStatusButton statuspageData={statuspageData} />
             {/* desktop -- (application launcher dropdown), import yaml, help dropdown [documentation, about] */}
@@ -762,7 +762,7 @@ const MastheadToolbarContents = connect(mastheadToolbarStateToProps, {
 export const MastheadToolbar = connectToFlags(
   FLAGS.CLUSTER_VERSION,
   FLAGS.CONSOLE_LINK,
-)(({ flags, onWisdomToggle, isWisdomOpen }) => {
+)(({ flags, onAssistantToggle, isAssistantOpen }) => {
   const resources = [];
   if (flags[FLAGS.CLUSTER_VERSION]) {
     resources.push({
@@ -782,7 +782,7 @@ export const MastheadToolbar = connectToFlags(
 
   return (
     <Firehose resources={resources}>
-      <MastheadToolbarContents onWisdomToggle={onWisdomToggle} isWisdomOpen={isWisdomOpen} />
+      <MastheadToolbarContents onAssistantToggle={onAssistantToggle} isAssistantOpen={isAssistantOpen} />
     </Firehose>
   );
 });

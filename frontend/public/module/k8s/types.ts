@@ -295,7 +295,7 @@ export type DeploymentCondition = {
   lastUpdateTime?: string;
 } & K8sResourceCondition;
 
-export type WisdomBackend = {
+export type AssistantBackend = {
   name: string;
   discoveryEndpoint: string;
   auth?: {
@@ -303,10 +303,12 @@ export type WisdomBackend = {
   };
 };
 
-export type WisdomKind = {
+export type AssistantKind = {
   spec: {
+    maxPollAttempts?: number;
+    timeBetweenPollAttempts?: number;
     hideAdvancedTab?: boolean;
-    backends: Array<WisdomBackend>;
+    backends: Array<AssistantBackend>;
   };
 } & K8sResourceCommon;
 

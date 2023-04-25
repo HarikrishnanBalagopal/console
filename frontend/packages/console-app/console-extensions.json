@@ -24,11 +24,11 @@
   {
     "type": "console.flag/model",
     "properties": {
-      "flag": "v1alpha3WISDOM",
+      "flag": "v1alpha4ASSISTANT",
       "model": {
         "group": "console.openshift.io",
-        "version": "v1alpha3",
-        "kind": "Wisdom"
+        "version": "v1alpha4",
+        "kind": "Assistant"
       }
     }
   },

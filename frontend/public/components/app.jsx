@@ -24,7 +24,7 @@ import { receivedResources, startAPIDiscovery } from '../actions/k8s';
 import { pluginStore } from '../plugins';
 // cloud shell imports must come later than features
 import CloudShell from '@console/app/src/components/cloud-shell/CloudShell';
-import WisdomSidebar from '@console/app/src/components/wisdom/WisdomSidebar';
+import AssistantSidebar from '@console/app/src/components/assistant/AssistantSidebar';
 import CloudShellTab from '@console/app/src/components/cloud-shell/CloudShellTab';
 import DetectPerspective from '@console/app/src/components/detect-perspective/DetectPerspective';
 import DetectCluster from '@console/app/src/components/detect-cluster/DetectCluster';
@@ -65,7 +65,6 @@ const NOTIFICATION_DRAWER_BREAKPOINT = 1800;
 import 'url-search-params-polyfill';
 import { withoutSensitiveInformations } from './utils/telemetry';
 import { graphQLReady } from '../graphql/client';
-import { isWisdomExpanded } from '@console/app/src/redux/reducers/wisdom-selectors';
 
 initI18n();
 
@@ -83,7 +82,7 @@ class App_ extends React.PureComponent {
     super(props);
 
     this._onNavToggle = this._onNavToggle.bind(this);
-    this._onWisdomToggle = this._onWisdomToggle.bind(this);
+    this._onAssistantToggle = this._onAssistantToggle.bind(this);
     this._onNavSelect = this._onNavSelect.bind(this);
     this._onNotificationDrawerToggle = this._onNotificationDrawerToggle.bind(this);
     this._isDesktop = this._isDesktop.bind(this);
@@ -93,7 +92,7 @@ class App_ extends React.PureComponent {
 
     this.state = {
       isNavOpen: this._isDesktop(),
-      isWisdomOpen: false,
+      isAssistantOpen: false,
       isDrawerInline: this._isLargeLayout(),
     };
   }
@@ -141,10 +140,10 @@ class App_ extends React.PureComponent {
     });
   }
 
-  _onWisdomToggle() {
+  _onAssistantToggle() {
     this.setState((prevState) => {
       return {
-        isWisdomOpen: !prevState.isWisdomOpen,
+        isAssistantOpen: !prevState.isAssistantOpen,
       };
     });
   }
@@ -179,7 +178,7 @@ class App_ extends React.PureComponent {
   }
 
   render() {
-    const { isNavOpen, isWisdomOpen, isDrawerInline } = this.state;
+    const { isNavOpen, isAssistantOpen: isAssistantOpen, isDrawerInline } = this.state;
     const { contextProviderExtensions } = this.props;
     const { productName } = getBrandingDetails();
 
@@ -192,7 +191,7 @@ class App_ extends React.PureComponent {
             <Page
               // Need to pass mainTabIndex=null to enable keyboard scrolling as default tabIndex is set to -1 by patternfly
               mainTabIndex={null}
-              header={<Masthead isNavOpen={isNavOpen} onNavToggle={this._onNavToggle} isWisdomOpen={isWisdomOpen} onWisdomToggle={this._onWisdomToggle} />}
+              header={<Masthead isNavOpen={isNavOpen} onNavToggle={this._onNavToggle} isAssistantOpen={isAssistantOpen} onAssistantToggle={this._onAssistantToggle} />}
               sidebar={
                 <Navigation
                   isNavOpen={isNavOpen}
@@ -207,8 +206,8 @@ class App_ extends React.PureComponent {
                   Skip to Content
                 </SkipToContent>
               }
-              notificationDrawer={<WisdomSidebar onClose={this._onWisdomToggle} />}
-              isNotificationDrawerExpanded={isWisdomOpen}
+              notificationDrawer={<AssistantSidebar onClose={this._onAssistantToggle} />}
+              isNotificationDrawerExpanded={isAssistantOpen}
             >
               <ConnectedNotificationDrawer
                 isDesktop={isDrawerInline}
