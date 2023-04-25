@@ -2,9 +2,13 @@
 
 ## Steps
 
-1. Deploy the Helm chart in the `helm-chart-for-wisdom` directory after editting the `values.yaml` to add your Wisdom backends.
+1. Deploy the Helm chart in the `helm-chart-for-wisdom` directory after editting the `values.yaml` to add your Wisdom backends and K8s secrets to add your API keys.
 
 2. Login to the Openshift cluster and do `make deploy-image` to deploy the custom Openshift Console image to the cluster.
+If you are using a custom image like `icr.io/wisdomocp/ocp-console-wisdom:v2.1` ,then you can deploy it with
+    ```
+    REGISTRY_IMAGE=icr.io/wisdomocp/ocp-console-wisdom:v2.1 make deploy-image
+    ```
 
 ## Optional: Steps for Deploying Manually
 
