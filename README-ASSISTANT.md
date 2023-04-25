@@ -3,11 +3,18 @@
 ## Steps
 
 1. Deploy the Helm chart in the `helm-chart-for-assistant` directory after editting the `values.yaml` to add your Assistant backends and K8s secrets to add your API keys.
+    ```
+    cd helm-chart-for-assistant/assistant/ && helm install myassistant .
+    ```
 
 2. Login to the Openshift cluster and do `make deploy-image` to deploy the custom Openshift Console image to the cluster.
 If you are using a custom image like `icr.io/wisdomocp/console-with-assistant:v1.155` ,then you can deploy it with
     ```
     REGISTRY_IMAGE=icr.io/wisdomocp/console-with-assistant:v1.155 make deploy-image
+    ```
+3. Optional: To make the old UI (by Jeff) work we need to deploy a K8s ConfigMap and Secret
+    ```
+    cd k8s-yamls-for-old-ui/ && kubectl apply -f .
     ```
 
 ## Optional: Steps for Deploying Manually
