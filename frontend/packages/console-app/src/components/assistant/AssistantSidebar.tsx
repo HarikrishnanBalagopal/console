@@ -328,7 +328,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
       <NotificationDrawerBody style={{ padding: '1em' }}
         tabIndex={-1}
         onKeyUp={e => {
-          console.log(e.key);
+          // console.log(e.key);
           if (e.key === 'Alt') {
             console.log("The 'Alt' key was pressed, and toggling the advanced menu...");
             setHideAdvancedTab(!hideAdvancedTab);

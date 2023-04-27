@@ -4,7 +4,7 @@ import { AssistantModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { AssistantAuthCreds, AssistantAnswer, DiscoveryAnswer, AssistantBackendForRedux, AsyncAssistantAnswerJobId } from './assistant-types';
 
-export const ASSISTANT_VERSION = 'v1.164';
+export const ASSISTANT_VERSION = 'v1.165';
 const DEFAULT_NAMESPACE = 'default';
 const ASSISTANT_AUTH_EMAIL = 'assistant-email';
 const ASSISTANT_AUTH_TOKEN = 'assistant-token';
