@@ -4,4 +4,4 @@ metadata:
   name: assistant-api-configmap
   namespace: openshift-config
 data:
-  endpoint: https://rhassistant-rhassistant.apps.os1.zurich.ibm.com
+  endpoint: ''

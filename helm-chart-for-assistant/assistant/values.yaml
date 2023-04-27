@@ -5,6 +5,6 @@ backends:
     auth:
       secretName: assistant-localhost-secret
   - name: Red Hat Assistant
-    discoveryEndpoint: https://rhassistant-rhassistant.apps.os1.zurich.ibm.com/api/v1/discovery
+    discoveryEndpoint: https://example.com/api/v1/discovery
     auth:
       secretName: assistant-rhassistant-secret
