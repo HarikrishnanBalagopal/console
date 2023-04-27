@@ -1,5 +1,5 @@
 import { AssistantAllBackends, AssistantAnswer } from '../../components/assistant/assistant-types';
-import { ASSISTANT_DEFAULT_MODEL_ID, ASSISTANT_DEFAULT_TASK_TITLE } from '../../components/assistant/assistant-utils';
+import { ASSISTANT_DEFAULT_BACKEND_ID, ASSISTANT_DEFAULT_TASK_TITLE } from '../../components/assistant/assistant-utils';
 import { AssistantActions, Actions } from '../actions/assistant-actions';
 
 type State = {
@@ -131,10 +131,9 @@ export default (state = initialState, action: AssistantActions): State => {
       const currentBackend = state.allBackends[currentBackendId];
       let currentModel = currentBackend?.discoveryAnswer.model_data[0];
       {
-        // TODO: temporarily hardcode a default model
-        if (currentModel) {
+        if (currentModel && currentBackend.defaultModelId) {
           const ms = currentBackend?.discoveryAnswer.model_data ?? [];
-          const found = ms.find(m => m.model_id === ASSISTANT_DEFAULT_MODEL_ID);
+          const found = ms.find(m => m.model_id === currentBackend.defaultModelId);
           if (found) {
             currentModel = found;
           }
@@ -200,24 +199,26 @@ export default (state = initialState, action: AssistantActions): State => {
       };
     }
     case Actions.SetAssistantBackend: {
-      if (Object.keys(state.allBackends).length > 0) {
-        return {
-          ...state,
-          allBackends: {
-            ...state.allBackends,
-            [action.payload.backend.id]: action.payload.backend,
-          },
-        };
-      }
-
       const currentBackend = action.payload.backend;
       const currentBackendId = currentBackend.id;
+
+      if (Object.keys(state.allBackends).length > 0) {
+        if (!ASSISTANT_DEFAULT_BACKEND_ID || currentBackendId !== ASSISTANT_DEFAULT_BACKEND_ID) {
+          return {
+            ...state,
+            allBackends: {
+              ...state.allBackends,
+              [action.payload.backend.id]: action.payload.backend,
+            },
+          };
+        }
+      }
+
       let currentModel = currentBackend?.discoveryAnswer.model_data[0];
       {
-        // TODO: temporarily hardcode a default model
-        if (currentModel) {
+        if (currentModel && currentBackend.defaultModelId) {
           const ms = currentBackend?.discoveryAnswer.model_data ?? [];
-          const found = ms.find(m => m.model_id === ASSISTANT_DEFAULT_MODEL_ID);
+          const found = ms.find(m => m.model_id === currentBackend.defaultModelId);
           if (found) {
             currentModel = found;
           }

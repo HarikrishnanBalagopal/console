@@ -4,7 +4,7 @@ import { AssistantModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { AssistantAuthCreds, AssistantAnswer, DiscoveryAnswer, AssistantBackendForRedux, AsyncAssistantAnswerJobId } from './assistant-types';
 
-export const ASSISTANT_VERSION = 'v1.155';
+export const ASSISTANT_VERSION = 'v1.164';
 const DEFAULT_NAMESPACE = 'default';
 const ASSISTANT_AUTH_EMAIL = 'assistant-email';
 const ASSISTANT_AUTH_TOKEN = 'assistant-token';
@@ -12,9 +12,7 @@ let ASSISTANT_MAX_POLL_ATTEMPTS = 60;
 let ASSISTANT_POLL_SLEEP_MS = 3000;
 export const ASSISTANT_DEFAULT_ENDPOINT = 'http://localhost:10000/api/v1/jobs';
 export const ASSISTANT_TASK_MODE = 'asynchronous';
-// TODO: temporarily hardcode a default model
-// export const ASSISTANT_DEFAULT_MODEL_ID = 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9jaGVja3BvaW50LTk0MzI4';
-export const ASSISTANT_DEFAULT_MODEL_ID = 'L3Byb2plY3RzL3dpc2RvbV9mb3Jfb3BlbnNoaWZ0L2Jsb29tei0xYjcvc3RhY2tvdmVyZmxvdy1kYXRhLWFsbC10YWdzL21hcmtkb3duL3RhZ2dlZC9ibG9vbXpfMWI3X2FsbC9jaGVja3BvaW50LTQxMDAw';
+export let ASSISTANT_DEFAULT_BACKEND_ID = '';
 // TODO: temporarily hardcode a default model task
 // export const ASSISTANT_DEFAULT_TASK_TITLE = 'NL to Answer generation';
 export const ASSISTANT_DEFAULT_TASK_TITLE = 'NL to YAML generation';
@@ -181,6 +179,7 @@ export const getAllAssistantBackends = async (addANewBackend: (w: AssistantBacke
     const assistantObject = allAssistantObjects.items[0];
     if (Number.isInteger(assistantObject.spec.maxPollAttempts) && assistantObject.spec.maxPollAttempts > 0) {
       ASSISTANT_MAX_POLL_ATTEMPTS = assistantObject.spec.maxPollAttempts;
+      ASSISTANT_DEFAULT_BACKEND_ID = assistantObject.spec.defaultBackendId;
     }
     if (Number.isInteger(assistantObject.spec.timeBetweenPollAttempts) && assistantObject.spec.timeBetweenPollAttempts > 0) {
       ASSISTANT_POLL_SLEEP_MS = assistantObject.spec.timeBetweenPollAttempts;
@@ -200,9 +199,11 @@ export const getAllAssistantBackends = async (addANewBackend: (w: AssistantBacke
         const discoveryAnswer = await getAssistantBackendDiscoveryInfo(backend.discoveryEndpoint, creds);
         const host = new URL(backend.discoveryEndpoint);
         const backendObj: AssistantBackendForRedux = {
-          id: backend.name,
+          id: backend.id,
+          name: backend.name,
           host,
           discoveryAnswer,
+          defaultModelId: backend.defaultModelId,
           creds,
         };
         console.log('found another backend:', backendObj);

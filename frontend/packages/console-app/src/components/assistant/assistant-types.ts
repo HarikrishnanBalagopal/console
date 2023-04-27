@@ -50,8 +50,10 @@ export type AssistantAuthCreds = {
 }
 export type AssistantBackendForRedux = {
     id: string;
+    name?: string;
     host: URL;
     discoveryAnswer: DiscoveryAnswer;
+    defaultModelId?: string;
     creds?: AssistantAuthCreds;
 }
 export type AssistantAllBackends = {

@@ -1,4 +1,4 @@
-apiVersion: console.openshift.io/v1alpha4
+apiVersion: console.openshift.io/v1alpha5
 kind: Assistant
 metadata:
   name: assistant-config

@@ -8,11 +8,68 @@ spec:
   group: console.openshift.io
   # list of versions supported by this CustomResourceDefinition
   versions:
-    - name: v1alpha4
+    - name: v1alpha5
       # Each version can be enabled/disabled by Served flag.
       served: true
       # One and only one version must be marked as the storage version.
       storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - backends
+              properties:
+                defaultBackendId:
+                  type: string
+                  description: 'The default backend to use'
+                maxPollAttempts:
+                  type: integer
+                  description: 'maximum number of attempts to the Assistant backend to get the answer for a query'
+                  default: 60
+                timeBetweenPollAttempts:
+                  type: integer
+                  description: 'milliseconds to sleep between attempts to the Assistant backend to get the answer for a query'
+                  default: 3000
+                hideAdvancedTab:
+                  type: boolean
+                  description: 'hides the advanced tab in the Assistant sidebar'
+                  default: false
+                backends:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - discoveryEndpoint
+                    properties:
+                      id:
+                        type: string
+                        description: 'A unique id for this backend'
+                      name:
+                        type: string
+                        description: 'The name to display for the backend'
+                      discoveryEndpoint:
+                        type: string
+                        description: 'The discovery endpoint for the backend'
+                      defaultModelId:
+                        type: string
+                        description: 'A default model to use when the backend is selected'
+                      auth:
+                        type: object
+                        description: 'Credentials if the backend requires authorization'
+                        required:
+                          - secretName
+                        properties:
+                          secretName:
+                            type: string
+    - name: v1alpha4
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: false
       schema:
         openAPIV3Schema:
           type: object

@@ -296,8 +296,10 @@ export type DeploymentCondition = {
 } & K8sResourceCondition;
 
 export type AssistantBackend = {
-  name: string;
+  id: string;
+  name?: string;
   discoveryEndpoint: string;
+  defaultModelId?: string;
   auth?: {
     secretName: string;
   };
@@ -305,6 +307,7 @@ export type AssistantBackend = {
 
 export type AssistantKind = {
   spec: {
+    defaultBackendId?: string;
     maxPollAttempts?: number;
     timeBetweenPollAttempts?: number;
     hideAdvancedTab?: boolean;

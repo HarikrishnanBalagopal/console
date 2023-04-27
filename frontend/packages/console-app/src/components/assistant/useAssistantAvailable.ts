@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useFlag } from '@console/shared';
-import { FLAG_V1ALPHA4ASSISTANT } from '../../consts';
+import { FLAG_V1ALPHA5ASSISTANT } from '../../consts';
 import { checkAssistantAvailable } from './assistant-utils';
 
 const useAssistantAvailable = () => {
   const [assistantAvailable, setAssistantAvailable] = React.useState(false);
-  const flagEnabled = useFlag(FLAG_V1ALPHA4ASSISTANT);
+  const flagEnabled = useFlag(FLAG_V1ALPHA5ASSISTANT);
   React.useEffect(() => {
     let mounted = true;
     if (flagEnabled) {

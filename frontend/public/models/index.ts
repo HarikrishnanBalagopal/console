@@ -493,7 +493,7 @@ export const RouteModel: K8sKind = {
 
 export const AssistantModel: K8sKind = {
   apiGroup: 'console.openshift.io',
-  apiVersion: 'v1alpha4',
+  apiVersion: 'v1alpha5',
   label: 'Assistant',
   // t('public~Assistant')
   labelKey: 'public~Assistant',

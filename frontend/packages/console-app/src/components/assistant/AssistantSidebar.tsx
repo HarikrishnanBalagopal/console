@@ -2,9 +2,11 @@ import * as React from 'react';
 import {
   ActionGroup,
   Alert,
+  AlertVariant,
   Button,
   Card,
   CardBody,
+  Checkbox,
   Divider,
   ExpandableSection,
   Form,
@@ -33,11 +35,11 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { xonokai } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { RootState } from '@console/internal/redux';
-import { formatNamespacedRouteForResource } from '@console/shared/src/utils';
+import { useToast } from '@console/shared/src/components/toast';
 import ReactDiffViewer from 'react-diff-viewer';
 import {
   sendFeedbackToAssistant, sendQueryToAssistant, setAssistantCommand, setAssistantCurrentBackendId,
-  setAssistantCurrentModelId, setAssistantCurrentTaskId, setAssistantYaml,
+  setAssistantCurrentModelId, setAssistantCurrentTaskId, setAssistantHideAdvancedTab, setAssistantYaml,
 } from '../../redux/actions/assistant-actions';
 import {
   isAssistantHideAdvancedTab,
@@ -58,6 +60,7 @@ import { toggleCloudShellExpanded } from '../../redux/actions/cloud-shell-action
 import { isCloudShellExpanded } from '../../redux/reducers/cloud-shell-selectors';
 import { AssistantAllBackends, AssistantAnswer, AssistantModel, AssistantModelTask } from './assistant-types';
 import { ASSISTANT_VERSION } from './assistant-utils';
+import { getImportYAMLPath, useOnYamlEditPage } from './useOnYamlEditPage';
 
 import './AssistantSidebar.scss';
 
@@ -87,6 +90,7 @@ type DispatchProps = {
   setBackend: (id: string) => void;
   setBackendModel: (id: string) => void;
   setBackendModelTask: (id: string) => void;
+  setHideAdvancedTab: (hide: boolean) => void;
 };
 
 export type AssistantSidebarProps = {
@@ -94,10 +98,6 @@ export type AssistantSidebarProps = {
 } & StateProps & DispatchProps;
 
 const ALL_NAMESPACES = 'all-namespaces';
-
-const getImportYAMLPath = (activeNamespace: string): string =>
-  formatNamespacedRouteForResource('import', activeNamespace);
-
 
 type MyCodeBlockProps = {
   language: string;
@@ -108,6 +108,9 @@ type MyCodeBlockProps = {
 
 const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCodeBlockClick, handleGoToYamlImportPage, children, ...props }) => {
   // console.log(`oldCode -------------------------------------\n${oldCode}`);
+  // if(Array.isArray(children) && children.length > 0 && typeof children[0] === 'string' && children[0] !== '') {
+  //   console.log('DEBUG in here!!!!!!!!!!!!!', children);
+  // }
   const newCode = String(children);
   // console.log('newCode', newCode);
   const [isDiffOpen, setIsDiffOpen] = React.useState(false);
@@ -187,6 +190,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   setBackend,
   setBackendModel,
   setBackendModelTask,
+  setHideAdvancedTab,
 }) => {
   const backendArray = Object.values(allBackends);
   const currentBackendModels: Array<AssistantModel> = allBackends[currentBackendId]?.discoveryAnswer.model_data;
@@ -194,6 +198,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   const currentBackendModelTask: AssistantModelTask | undefined = currentBackendModelTasks?.find(t => String(t.taskId) === currentTaskId);
 
   const [query, setQuery] = React.useState('');
+  const [changeTaskBasedOnCurrentPage, setChangeTaskBasedOnCurrentPage] = React.useState(true);
   const [endpointSelectOpen, setEndpointSelectOpen] = React.useState(false);
   const [modelSelectOpen, setModelSelectOpen] = React.useState(false);
   const [taskSelectOpen, setTaskSelectOpen] = React.useState(false);
@@ -204,13 +209,15 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   const history = useHistory();
   const location = useLocation();
   const terminalAvailable = useCloudShellAvailable();
+  const onYamlEditPage = useOnYamlEditPage(activeNamespace);
+  const toastContext = useToast();
 
   // handleGoToYamlImportPage returns false if we didn't have to navigate
   const handleGoToYamlImportPage = (): boolean => {
     const urlPath = getImportYAMLPath(activeNamespace);
     console.log('location', location, 'urlPath', urlPath);
-    if (location.pathname === urlPath) {
-      console.log('skipping navigation to import yaml page');
+    if (onYamlEditPage) {
+      console.log('skipping navigation to the import yaml page');
       return false;
     }
     console.log('navigating to import yaml page');
@@ -227,6 +234,22 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
     if (language === 'console' || language === 'bash') {
       if (!terminalAvailable) {
         console.log('cloud shell/terminal is not available');
+        toastContext.addToast({
+          variant: AlertVariant.danger,
+          title: 'Terminal is not available',
+          content: (<div>
+            The cloud shell/terminal is not available.
+            See <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://docs.openshift.com/container-platform/4.12/web_console/odc-about-web-terminal.html"
+            >
+              About the web terminal in the web console
+            </a> for more information.
+          </div>),
+          timeout: true,
+          dismissible: true,
+        });
         return;
       }
       setCommand(code);
@@ -238,7 +261,13 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
       }
       return;
     }
-    alert('not implemented yet');
+    toastContext.addToast({
+      variant: AlertVariant.danger,
+      title: 'Not implemented yet',
+      content: `Support for handling '${language}' has not been implemented yet`,
+      timeout: true,
+      dismissible: true,
+    });
   };
 
   const treeData: TreeViewDataItem = { 'id': 'models', 'name': 'models' };
@@ -273,8 +302,21 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
     setActiveItems([{ 'id': currentModelId, 'name': part }]);
   }, [JSON.stringify(currentBackendModels), currentModelId]);
 
-  // console.log('currentBackendModels', currentBackendModels);
-  // console.log('treeData', treeData);
+  React.useEffect(() => {
+    // console.log('changeTaskBasedOnCurrentPage', changeTaskBasedOnCurrentPage, 'onYamlEditPage', onYamlEditPage);
+    if (!changeTaskBasedOnCurrentPage) return;
+    if (onYamlEditPage) {
+      if (currentTaskId !== '3') {
+        console.log('Changing the task to NL2Yaml (task 3) since we are on a YAML edit page');
+        setBackendModelTask('3');
+      }
+    } else {
+      if (currentTaskId !== '4') {
+        console.log('Changing the task back to NL2Answer (task 4) since we are no longer on a YAML edit page');
+        setBackendModelTask('4');
+      }
+    }
+  }, [onYamlEditPage, changeTaskBasedOnCurrentPage, location.pathname, currentTaskId]);
 
   return (
     <NotificationDrawer translate='no' className="on-top-z-index-301">
@@ -283,7 +325,16 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
           <TimesIcon />
         </Button>
       </NotificationDrawerHeader>
-      <NotificationDrawerBody style={{ padding: '1em' }}>
+      <NotificationDrawerBody style={{ padding: '1em' }}
+        tabIndex={-1}
+        onKeyUp={e => {
+          console.log(e.key);
+          if (e.key === 'Alt') {
+            console.log("The 'Alt' key was pressed, and toggling the advanced menu...");
+            setHideAdvancedTab(!hideAdvancedTab);
+          }
+        }}
+      >
         <Stack hasGutter>
           <Form ref={formRef} noValidate={false} onSubmit={(e) => e.preventDefault()}>
             <FormGroup isRequired label="A short description of the issue you are facing">
@@ -291,8 +342,9 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                 isRequired
                 aria-label="description of the issue"
                 name="description"
-                placeholder="I need the YAML for deploying Redis image with 24 replicas."
+                placeholder="I need the YAML for deploying Redis image with 2 replicas."
                 value={query}
+                rows={5}
                 onChange={(v) => setQuery(v)}
               />
             </FormGroup>
@@ -315,7 +367,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                         onSelect={(_, s) => { setBackend(s.toString()); setEndpointSelectOpen(false); }}
                         name="assistant-backend"
                         aria-label="selected assistant backend">
-                        {backendArray.map((e) => <SelectOption key={e.id} value={e.id}>{e.id}</SelectOption>)}
+                        {backendArray.map((e) => <SelectOption key={e.id} value={e.id}>{e.name}</SelectOption>)}
                       </Select>
                     </FormGroup><br />
                     {
@@ -323,7 +375,8 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                         <>
                           <FormGroup isRequired label="Select the model to use">
                             <div>
-                              {currentModelId && <div>The selected model is &apos;{currentBackendModels.find(m => m.model_id === currentModelId)?.model_path}&apos;</div>}
+                              {currentModelId && <div>The selected model is
+                                <Card isFlat isRounded><CardBody>{currentBackendModels.find(m => m.model_id === currentModelId)?.model_path}</CardBody></Card></div>}
                               <Button variant="link" onClick={() => setModelSelectOpen(!modelSelectOpen)}>
                                 {modelSelectOpen && 'Collapse all'}
                                 {!modelSelectOpen && 'Expand all'}
@@ -346,9 +399,18 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                             currentModelId && currentBackendModelTasks?.length > 0 ? (
                               <>
                                 <FormGroup isRequired label="Select the task to use">
+                                  <Checkbox
+                                    label="Select the task automatically based on the current page"
+                                    isChecked={changeTaskBasedOnCurrentPage}
+                                    onChange={(checked) => setChangeTaskBasedOnCurrentPage(checked)}
+                                    id="checkbox-change-task-based-on-current-page"
+                                    name="checkbox-change-task-based-on-current-page"
+                                    aria-label="change task based on the current page"
+                                  /><br />
                                   <Select
                                     variant={SelectVariant.single}
                                     isOpen={taskSelectOpen}
+                                    isDisabled={changeTaskBasedOnCurrentPage}
                                     onToggle={() => setTaskSelectOpen(!taskSelectOpen)}
                                     selections={currentTaskId}
                                     onSelect={(_, s) => { setBackendModelTask(s.toString()); setTaskSelectOpen(false); }}
@@ -413,11 +475,22 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                   <ReactMarkdown
                     components={{
                       'code': ({ node, inline, className, children, ...props }) => {
+                        // console.log('DEBUG >>>>>>>>>>>>> className', className, 'children', JSON.stringify(children));
                         const match = /language-(\w+)/.exec(className ?? '');
                         return !inline && match && match.length >= 2 ? (
                           <MyCodeBlock
                             oldCode={currentEditorYaml}
                             language={match[1]}
+                            handleCodeBlockClick={handleCodeBlockClick}
+                            handleGoToYamlImportPage={handleGoToYamlImportPage}
+                            {...props}
+                          >
+                            {children}
+                          </MyCodeBlock>
+                        ) : !inline && className === undefined ? (
+                          <MyCodeBlock
+                            oldCode={currentEditorYaml}
+                            language={'console'}
                             handleCodeBlockClick={handleCodeBlockClick}
                             handleGoToYamlImportPage={handleGoToYamlImportPage}
                             {...props}
@@ -487,6 +560,7 @@ const dispatchToProps = (dispatch): DispatchProps => ({
   setBackend: (id: string) => { console.log('setting backend to:', id); dispatch(setAssistantCurrentBackendId(id)); },
   setBackendModel: (id: string) => { console.log('setting backend model to:', id); dispatch(setAssistantCurrentModelId(id)); },
   setBackendModelTask: (id: string) => { console.log('setting backend model task to:', id); dispatch(setAssistantCurrentTaskId(id)); },
+  setHideAdvancedTab: (hide: boolean) => { console.log('setting the hideAdvancedTab to:', hide); dispatch(setAssistantHideAdvancedTab(hide)); },
 });
 
 export default connect<StateProps, DispatchProps>(stateToProps, dispatchToProps)(AssistantSidebar);
