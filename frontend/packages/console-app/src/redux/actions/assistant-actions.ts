@@ -22,6 +22,7 @@ export enum Actions {
   SetAssistantAnswer = 'setAssistantAnswer',
   SetAssistantYaml = 'setAssistantYaml',
   SetAssistantCommand = 'setAssistantCommand',
+  SetAssistantDefaultBackendId = 'setAssistantDefaultBackendId',
   SetAssistantCurrentBackendId = 'setAssistantCurrentBackendId',
   SetAssistantCurrentModelId = 'setAssistantCurrentModelId',
   SetAssistantCurrentTaskId = 'setAssistantCurrentTaskId',
@@ -68,6 +69,9 @@ export const setAssistantYaml = (yaml: string | undefined, isAppend: boolean) =>
 export const setAssistantCommand = (command: string | undefined) =>
   action(Actions.SetAssistantCommand, { command });
 
+export const setAssistantDefaultBackendId = (defaultBackendId: string | undefined) =>
+  action(Actions.SetAssistantDefaultBackendId, { defaultBackendId });
+
 export const setAssistantCurrentBackendId = (backendId: string | undefined) =>
   action(Actions.SetAssistantCurrentBackendId, { backendId });
 
@@ -105,6 +109,7 @@ const actions = {
   setAssistantAnswer,
   setAssistantYaml,
   setAssistantCommand,
+  setAssistantDefaultBackendId,
   setAssistantCurrentBackendId,
   setAssistantCurrentModelId,
   setAssistantCurrentTaskId,
@@ -133,6 +138,7 @@ export const initializeAssistant = (): ThunkAction<void, RootState, unknown, Any
       dispatch(setAssistantFetchingBackendsPartial(false));
       dispatch(setAssistantFetchingBackends(true));
       await getAllAssistantBackends(
+        (id: string) => setAssistantDefaultBackendId(id),
         (w: AssistantBackendForRedux) => {
           dispatch(setAssistantBackend(w));
           dispatch(setAssistantFetchingBackendsPartial(true));

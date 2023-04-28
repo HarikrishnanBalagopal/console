@@ -228,7 +228,7 @@ const YAMLAssistantSidebar: React.FC<YAMLAssistantSidebarProps> = ({
             onClick={toggleSidebar}
           />
           <h2 className="co-p-has-sidebar__sidebar-heading text-capitalize">{sidebarLabel}</h2>
-          <div>{t('console-shared~Enter any prompt and get YAML snippet back!')}</div>
+          <div>{t('console-shared~Enter the query for YAML assistance')}</div>
           <div className="pf-u-mr-md pf-u-mb-sm pf-u-mt-xs">
             <TextArea
               className="ocs-yaml-assistant__input-area"

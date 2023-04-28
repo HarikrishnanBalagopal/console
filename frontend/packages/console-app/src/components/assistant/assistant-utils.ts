@@ -4,15 +4,12 @@ import { AssistantModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { AssistantAuthCreds, AssistantAnswer, DiscoveryAnswer, AssistantBackendForRedux, AsyncAssistantAnswerJobId } from './assistant-types';
 
-export const ASSISTANT_VERSION = 'v1.165';
-const DEFAULT_NAMESPACE = 'default';
+export const ASSISTANT_VERSION = 'v1.166';
 const ASSISTANT_AUTH_EMAIL = 'assistant-email';
 const ASSISTANT_AUTH_TOKEN = 'assistant-token';
 let ASSISTANT_MAX_POLL_ATTEMPTS = 60;
 let ASSISTANT_POLL_SLEEP_MS = 3000;
-export const ASSISTANT_DEFAULT_ENDPOINT = 'http://localhost:10000/api/v1/jobs';
 export const ASSISTANT_TASK_MODE = 'asynchronous';
-export let ASSISTANT_DEFAULT_BACKEND_ID = '';
 // TODO: temporarily hardcode a default model task
 // export const ASSISTANT_DEFAULT_TASK_TITLE = 'NL to Answer generation';
 export const ASSISTANT_DEFAULT_TASK_TITLE = 'NL to YAML generation';
@@ -168,7 +165,11 @@ export const postFeedbackToAssistantApi = async (
   }
 };
 
-export const getAllAssistantBackends = async (addANewBackend: (w: AssistantBackendForRedux) => void, setHideAdvancedTab: (x: boolean) => void): Promise<void> => {
+export const getAllAssistantBackends = async (
+  setDefaultBackendId: (id: string) => void,
+  addANewBackend: (w: AssistantBackendForRedux) => void,
+  setHideAdvancedTab: (x: boolean) => void
+): Promise<void> => {
   console.log('fetching data about assistant backends');
   try {
     const allAssistantObjects = await getAllObjectsOfAssistantKind();
@@ -177,21 +178,26 @@ export const getAllAssistantBackends = async (addANewBackend: (w: AssistantBacke
       throw new Error(`expected there to be exactly one object of kind Assistant. actual: ${JSON.stringify(allAssistantObjects)}`);
     }
     const assistantObject = allAssistantObjects.items[0];
+    console.log('assistantObject', assistantObject);
+    const assistantNamespace = assistantObject.metadata?.namespace ?? 'default';
+    console.log('assistantNamespace', assistantNamespace);
+    if (assistantObject.spec.defaultBackendId) {
+      console.log('setting the default backend id:', assistantObject.spec.defaultBackendId);
+      setDefaultBackendId(assistantObject.spec.defaultBackendId);
+    }
     if (Number.isInteger(assistantObject.spec.maxPollAttempts) && assistantObject.spec.maxPollAttempts > 0) {
       ASSISTANT_MAX_POLL_ATTEMPTS = assistantObject.spec.maxPollAttempts;
-      ASSISTANT_DEFAULT_BACKEND_ID = assistantObject.spec.defaultBackendId;
     }
     if (Number.isInteger(assistantObject.spec.timeBetweenPollAttempts) && assistantObject.spec.timeBetweenPollAttempts > 0) {
       ASSISTANT_POLL_SLEEP_MS = assistantObject.spec.timeBetweenPollAttempts;
     }
-    console.log('assistantObject', assistantObject, 'name', assistantObject.metadata?.name, 'backends', assistantObject.spec.backends);
     if (assistantObject.spec.hideAdvancedTab !== undefined) setHideAdvancedTab(Boolean(assistantObject.spec.hideAdvancedTab));
     assistantObject.spec.backends.forEach(async (backend) => {
       try {
         console.log('assistant backend', backend);
         let creds: AssistantAuthCreds | undefined = undefined;
         if (backend.auth) {
-          const backendAuthSecret = await getAssistantAuthSecret(DEFAULT_NAMESPACE, backend.auth.secretName);
+          const backendAuthSecret = await getAssistantAuthSecret(assistantNamespace, backend.auth.secretName);
           console.log('got the auth secret for the assistant backend', backend.name, 'secret', backendAuthSecret);
           creds = getAssistantAuthCredsFromSecret(backendAuthSecret);
           console.log('got the auth credentials', creds);

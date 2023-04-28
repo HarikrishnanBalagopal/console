@@ -1,5 +1,5 @@
 import { AssistantAllBackends, AssistantAnswer } from '../../components/assistant/assistant-types';
-import { ASSISTANT_DEFAULT_BACKEND_ID, ASSISTANT_DEFAULT_TASK_TITLE } from '../../components/assistant/assistant-utils';
+import { ASSISTANT_DEFAULT_TASK_TITLE } from '../../components/assistant/assistant-utils';
 import { AssistantActions, Actions } from '../actions/assistant-actions';
 
 type State = {
@@ -17,6 +17,7 @@ type State = {
   yamlIsAppend: boolean;
   command: string | undefined;
   allBackends: AssistantAllBackends;
+  defaultBackendId: string | undefined;
   currentBackendId: string | undefined;
   currentModelId: string | undefined;
   currentTaskId: string | undefined;
@@ -39,6 +40,7 @@ const initialState: State = {
   yaml: undefined,
   yamlIsAppend: false,
   command: undefined,
+  defaultBackendId: undefined,
   currentBackendId: undefined,
   currentModelId: undefined,
   currentTaskId: undefined,
@@ -126,6 +128,11 @@ export default (state = initialState, action: AssistantActions): State => {
         ...state,
         currentJobProgress: action.payload.jobProgress,
       };
+    case Actions.SetAssistantDefaultBackendId:
+      return {
+        ...state,
+        defaultBackendId: action.payload.defaultBackendId,
+      };
     case Actions.SetAssistantCurrentBackendId: {
       const currentBackendId = action.payload.backendId;
       const currentBackend = state.allBackends[currentBackendId];
@@ -203,7 +210,7 @@ export default (state = initialState, action: AssistantActions): State => {
       const currentBackendId = currentBackend.id;
 
       if (Object.keys(state.allBackends).length > 0) {
-        if (!ASSISTANT_DEFAULT_BACKEND_ID || currentBackendId !== ASSISTANT_DEFAULT_BACKEND_ID) {
+        if (!state.defaultBackendId || currentBackendId !== state.defaultBackendId) {
           return {
             ...state,
             allBackends: {

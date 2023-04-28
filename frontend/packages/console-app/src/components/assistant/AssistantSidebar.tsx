@@ -337,7 +337,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
       >
         <Stack hasGutter>
           <Form ref={formRef} noValidate={false} onSubmit={(e) => e.preventDefault()}>
-            <FormGroup isRequired label="A short description of the issue you are facing">
+            <FormGroup isRequired label="Please enter your query">
               <TextArea
                 isRequired
                 aria-label="description of the issue"
@@ -454,7 +454,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
             </ActionGroup>
           </Form>
           <Divider className="margin-top-bottom-1em" />
-          <Card>
+          {(error || isLoading || data) ? (<Card>
             <CardBody className="overflow-x-scroll">
               {error ? (
                 <Alert variant="danger" title={error} />
@@ -470,7 +470,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                   </>)}
                   <Spinner />
                 </>
-              ) : data ? (
+              ) : (
                 <div>
                   <ReactMarkdown
                     components={{
@@ -525,9 +525,9 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                     </Split>
                   )}
                 </div>
-              ) : null}
+              )}
             </CardBody>
-          </Card>
+          </Card>) : null}
         </Stack>
       </NotificationDrawerBody>
     </NotificationDrawer>
