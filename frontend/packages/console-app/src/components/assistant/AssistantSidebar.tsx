@@ -59,7 +59,7 @@ import useCloudShellAvailable from '../cloud-shell/useCloudShellAvailable';
 import { toggleCloudShellExpanded } from '../../redux/actions/cloud-shell-actions';
 import { isCloudShellExpanded } from '../../redux/reducers/cloud-shell-selectors';
 import { AssistantAllBackends, AssistantAnswer, AssistantModel, AssistantModelTask } from './assistant-types';
-import { ASSISTANT_VERSION } from './assistant-utils';
+import { ASSISTANT_TITLE } from './assistant-utils';
 import { getImportYAMLPath, useOnYamlEditPage } from './useOnYamlEditPage';
 
 import './AssistantSidebar.scss';
@@ -320,7 +320,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
 
   return (
     <NotificationDrawer translate='no' className="on-top-z-index-301">
-      <NotificationDrawerHeader title={"Assistant " + ASSISTANT_VERSION}>
+      <NotificationDrawerHeader title={ASSISTANT_TITLE}>
         <Button aria-label="close button" variant="link" onClick={onClose}>
           <TimesIcon />
         </Button>
@@ -445,7 +445,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                 </ExpandableSection>
               )
             }
-            <ActionGroup>
+            <ActionGroup style={{ marginTop: 0 }}>
               <Button isDisabled={isLoading} onClick={() => {
                 if (formRef.current && !formRef.current.reportValidity()) return;
                 sendQuery(currentEditorYaml ? '```\n' + currentEditorYaml + '```\n' + query : query);
