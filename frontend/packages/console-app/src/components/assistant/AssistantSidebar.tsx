@@ -4,6 +4,7 @@ import {
   Alert,
   AlertVariant,
   Button,
+  ButtonVariant,
   Card,
   CardBody,
   Checkbox,
@@ -28,7 +29,7 @@ import {
   TreeView,
   TreeViewDataItem,
 } from '@patternfly/react-core';
-import { TimesIcon, PlusCircleIcon, PencilAltIcon, ThumbsUpIcon, ThumbsDownIcon } from '@patternfly/react-icons';
+import { CloseIcon, PlusCircleIcon, PencilAltIcon, ThumbsUpIcon, ThumbsDownIcon } from '@patternfly/react-icons';
 import ReactMarkdown from 'react-markdown';
 import { connect } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -59,17 +60,18 @@ import useCloudShellAvailable from '../cloud-shell/useCloudShellAvailable';
 import { toggleCloudShellExpanded } from '../../redux/actions/cloud-shell-actions';
 import { isCloudShellExpanded } from '../../redux/reducers/cloud-shell-selectors';
 import { AssistantAllBackends, AssistantAnswer, AssistantModel, AssistantModelTask } from './assistant-types';
-import { ASSISTANT_TITLE } from './assistant-utils';
+import { ASSISTANT_TITLE, ASSISTANT_VERSION } from './assistant-utils';
 import { getImportYAMLPath, useOnYamlEditPage } from './useOnYamlEditPage';
 
 import './AssistantSidebar.scss';
+import { setAssistantAnswer } from '../../redux/actions/assistant-actions';
 
 type StateProps = {
   activeNamespace: string;
-  data?: AssistantAnswer;
-  isLoading?: boolean;
+  assistantAnswer?: AssistantAnswer;
+  isAssistantAnswerLoading?: boolean;
   isSendingFeedback?: boolean;
-  error?: string;
+  assistantError?: string;
   feedbackError?: string;
   isCloudShellOpen?: boolean;
   allBackends: AssistantAllBackends;
@@ -84,6 +86,7 @@ type StateProps = {
 type DispatchProps = {
   sendQuery: (query: string) => void;
   sendFeedback: (good: boolean) => void;
+  clearAssistantAnswer: () => void;
   setYaml: (yaml: string, isAppend: boolean) => void;
   setCommand: (command: string) => void;
   openCloudshell: () => void;
@@ -102,20 +105,28 @@ const ALL_NAMESPACES = 'all-namespaces';
 type MyCodeBlockProps = {
   language: string;
   oldCode: string;
+  onYamlEditPage: boolean;
   handleCodeBlockClick: (language: string, code: string, isAppend: boolean) => void;
   handleGoToYamlImportPage: () => boolean;
 };
 
-const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCodeBlockClick, handleGoToYamlImportPage, children, ...props }) => {
+const MyCodeBlock: React.FC<MyCodeBlockProps> = ({
+  language,
+  oldCode,
+  onYamlEditPage,
+  handleCodeBlockClick,
+  handleGoToYamlImportPage,
+  children,
+  ...props }) => {
   // console.log(`oldCode -------------------------------------\n${oldCode}`);
   // if(Array.isArray(children) && children.length > 0 && typeof children[0] === 'string' && children[0] !== '') {
   //   console.log('DEBUG in here!!!!!!!!!!!!!', children);
   // }
   const newCode = String(children);
   // console.log('newCode', newCode);
-  const [isDiffOpen, setIsDiffOpen] = React.useState(false);
+  const [isDiffOpen, setIsDiffOpen] = React.useState(language === 'yaml' && oldCode && onYamlEditPage && oldCode !== newCode);
   return (
-    <div className="assistant-code-block-wrapper margin-top-bottom-1em">
+    <div className='assistant-code-block-wrapper margin-top-bottom-1em'>
       {isDiffOpen ? (
         <>
           <ReactDiffViewer oldValue={oldCode ?? ''} newValue={newCode} splitView={false} useDarkTheme={true} showDiffOnly={true} />
@@ -144,7 +155,7 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
                     setIsDiffOpen(true);
                   }}
                 >
-                  <PencilAltIcon />
+                  <PencilAltIcon size='md' />
                 </Button>
               </StackItem>
             )}
@@ -156,7 +167,7 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
                   handleCodeBlockClick(language, newCode, true);
                 }}
               >
-                <PlusCircleIcon />
+                <PlusCircleIcon size='md' />
               </Button>
             </StackItem>
           </Stack>
@@ -168,10 +179,10 @@ const MyCodeBlock: React.FC<MyCodeBlockProps> = ({ language, oldCode, handleCode
 
 const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   activeNamespace,
-  data,
-  isLoading,
+  assistantAnswer,
+  isAssistantAnswerLoading,
   isSendingFeedback,
-  error,
+  assistantError,
   feedbackError,
   isCloudShellOpen,
   allBackends,
@@ -185,6 +196,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   openCloudshell,
   sendQuery,
   sendFeedback,
+  clearAssistantAnswer,
   setYaml,
   setCommand,
   setBackend,
@@ -229,6 +241,8 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
     if (language === 'yaml') {
       setYaml(code, isAppend);
       handleGoToYamlImportPage();
+      clearAssistantAnswer();
+      setQuery('');
       return;
     }
     if (language === 'console' || language === 'bash') {
@@ -318,11 +332,25 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
     }
   }, [onYamlEditPage, changeTaskBasedOnCurrentPage, location.pathname, currentTaskId]);
 
+  const onSubmit = () => {
+    if (!formRef.current || !formRef.current.reportValidity()) return;
+    sendQuery(currentEditorYaml ? '```\n' + currentEditorYaml + '```\n' + query : query);
+    setIsFeedbackSent(false);
+  };
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      onSubmit();
+    }
+  };
   return (
     <NotificationDrawer translate='no' className="on-top-z-index-301">
       <NotificationDrawerHeader title={ASSISTANT_TITLE}>
-        <Button aria-label="close button" variant="link" onClick={onClose}>
-          <TimesIcon />
+        <Button
+          aria-label="close button"
+          className="co-close-button co-p-has-sidebar__close-button"
+          variant="plain"
+          onClick={onClose}>
+          <CloseIcon />
         </Button>
       </NotificationDrawerHeader>
       <NotificationDrawerBody style={{ padding: '1em' }}
@@ -342,12 +370,36 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                 isRequired
                 aria-label="description of the issue"
                 name="description"
-                placeholder="I need the YAML for deploying Redis image with 2 replicas."
+                placeholder="I need the YAML for deploying the image redis with 2 replicas."
                 value={query}
-                rows={5}
+                rows={4}
+                onKeyDown={onKeyDown}
+                isDisabled={isAssistantAnswerLoading}
                 onChange={(v) => setQuery(v)}
               />
             </FormGroup>
+            <ActionGroup style={{ marginTop: 0 }}>
+              {!hideAdvancedTab && (<p>UI version: {ASSISTANT_VERSION}</p>)}
+              <Button
+                style={{ marginLeft: 'auto' }}
+                isDisabled={isAssistantAnswerLoading || !query}
+                onClick={onSubmit}
+                variant={ButtonVariant.secondary}
+                type="submit">
+                {isAssistantAnswerLoading ? (
+                  <div
+                    className="co-m-loader co-an-fade-in-out ocs-yaml-assistant__pending-button"
+                    data-test="loading-indicator"
+                  >
+                    <div className="co-m-loader-dot__one" />
+                    <div className="co-m-loader-dot__two" />
+                    <div className="co-m-loader-dot__three" />
+                  </div>
+                ) : (
+                  'Submit'
+                )}
+              </Button>
+            </ActionGroup>
             {
               backendArray.length === 0 ? (
                 <div className='center-text'>
@@ -445,89 +497,85 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                 </ExpandableSection>
               )
             }
-            <ActionGroup style={{ marginTop: 0 }}>
-              <Button isDisabled={isLoading} onClick={() => {
-                if (formRef.current && !formRef.current.reportValidity()) return;
-                sendQuery(currentEditorYaml ? '```\n' + currentEditorYaml + '```\n' + query : query);
-                setIsFeedbackSent(false);
-              }} type="submit">Submit</Button>
-            </ActionGroup>
           </Form>
-          <Divider className="margin-top-bottom-1em" />
-          {(error || isLoading || data) ? (<Card>
-            <CardBody className="overflow-x-scroll">
-              {error ? (
-                <Alert variant="danger" title={error} />
-              ) : isLoading ? (
-                <>
-                  {currentJobProgress >= 0 && (<>
-                    <Progress
-                      value={currentJobProgress}
-                      measureLocation="none"
-                      size={ProgressSize.sm}
-                      aria-label="time elapsed waiting for the assistant" />
-                    <br />
-                  </>)}
-                  <Spinner />
-                </>
-              ) : (
-                <div>
-                  <ReactMarkdown
-                    components={{
-                      'code': ({ node, inline, className, children, ...props }) => {
-                        // console.log('DEBUG >>>>>>>>>>>>> className', className, 'children', JSON.stringify(children));
-                        const match = /language-(\w+)/.exec(className ?? '');
-                        return !inline && match && match.length >= 2 ? (
-                          <MyCodeBlock
-                            oldCode={currentEditorYaml}
-                            language={match[1]}
-                            handleCodeBlockClick={handleCodeBlockClick}
-                            handleGoToYamlImportPage={handleGoToYamlImportPage}
-                            {...props}
-                          >
-                            {children}
-                          </MyCodeBlock>
-                        ) : !inline && className === undefined ? (
-                          <MyCodeBlock
-                            oldCode={currentEditorYaml}
-                            language={'console'}
-                            handleCodeBlockClick={handleCodeBlockClick}
-                            handleGoToYamlImportPage={handleGoToYamlImportPage}
-                            {...props}
-                          >
-                            {children}
-                          </MyCodeBlock>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      },
-                    }}
-                  >
-                    {data.task_output}
-                  </ReactMarkdown>
-                  <Divider className="margin-top-bottom-1em" />
-                  {feedbackError ? (
-                    <Alert variant="danger" title={feedbackError} />
-                  ) : isSendingFeedback ? (
-                    <Spinner size="lg" />
-                  ) : isFeedbackSent ? (
-                    <span>Thanks for submitting the feedback! It will be used to improve the assistant.</span>
-                  ) : (
-                    <Split hasGutter className='align-flex-end'>
-                      <SplitItem>
-                        <Button onClick={() => { setIsFeedbackSent(true); sendFeedback(true); }}><ThumbsUpIcon /></Button>
-                      </SplitItem>
-                      <SplitItem>
-                        <Button onClick={() => { setIsFeedbackSent(true); sendFeedback(false); }}><ThumbsDownIcon /></Button>
-                      </SplitItem>
-                    </Split>
-                  )}
-                </div>
-              )}
-            </CardBody>
-          </Card>) : null}
+          <Divider className='margin-top-bottom-1em' />
+          {(assistantError || isAssistantAnswerLoading || assistantAnswer) ? (
+            <Card>
+              <CardBody className="overflow-x-scroll">
+                {assistantError ? (
+                  <Alert variant="danger" title={assistantError} />
+                ) : isAssistantAnswerLoading ? (
+                  <>
+                    {currentJobProgress >= 0 ? (
+                      <Progress
+                        value={currentJobProgress}
+                        size={ProgressSize.sm}
+                        aria-label="time elapsed waiting for the assistant" />
+                    ) : (
+                      <Spinner size="lg" />
+                    )}
+                  </>
+                ) : (
+                  <div>
+                    <ReactMarkdown
+                      components={{
+                        'code': ({ node, inline, className, children, ...props }) => {
+                          // console.log('DEBUG >>>>>>>>>>>>> className', className, 'children', JSON.stringify(children));
+                          const match = /language-(\w+)/.exec(className ?? '');
+                          return !inline && match && match.length >= 2 ? (
+                            <MyCodeBlock
+                              onYamlEditPage={onYamlEditPage}
+                              oldCode={currentEditorYaml}
+                              language={match[1]}
+                              handleCodeBlockClick={handleCodeBlockClick}
+                              handleGoToYamlImportPage={handleGoToYamlImportPage}
+                              {...props}
+                            >
+                              {children}
+                            </MyCodeBlock>
+                          ) : !inline && className === undefined ? (
+                            <MyCodeBlock
+                              onYamlEditPage={onYamlEditPage}
+                              oldCode={currentEditorYaml}
+                              language={'console'}
+                              handleCodeBlockClick={handleCodeBlockClick}
+                              handleGoToYamlImportPage={handleGoToYamlImportPage}
+                              {...props}
+                            >
+                              {children}
+                            </MyCodeBlock>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {assistantAnswer.task_output}
+                    </ReactMarkdown>
+                    <Divider className="margin-top-bottom-1em" />
+                    {feedbackError ? (
+                      <Alert variant="danger" title={feedbackError} />
+                    ) : isSendingFeedback ? (
+                      <Spinner size="lg" />
+                    ) : isFeedbackSent ? (
+                      <span>Thanks for submitting the feedback! It will be used to improve the assistant.</span>
+                    ) : (
+                      <Split hasGutter className='align-flex-end'>
+                        <SplitItem>
+                          <Button onClick={() => { setIsFeedbackSent(true); sendFeedback(true); }}><ThumbsUpIcon /></Button>
+                        </SplitItem>
+                        <SplitItem>
+                          <Button onClick={() => { setIsFeedbackSent(true); sendFeedback(false); }}><ThumbsDownIcon /></Button>
+                        </SplitItem>
+                      </Split>
+                    )}
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          ) : null}
         </Stack>
       </NotificationDrawerBody>
     </NotificationDrawer>
@@ -536,10 +584,10 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
 
 const stateToProps = (state: RootState): StateProps => ({
   activeNamespace: state.UI.get('activeNamespace', ALL_NAMESPACES),
-  data: selectAssistantAnswer(state),
-  isLoading: isAssistantLoading(state),
+  assistantAnswer: selectAssistantAnswer(state),
+  isAssistantAnswerLoading: isAssistantLoading(state),
   isSendingFeedback: isAssistantSendingFeedback(state),
-  error: selectAssistantError(state),
+  assistantError: selectAssistantError(state),
   feedbackError: selectAssistantFeedbackError(state),
   isCloudShellOpen: isCloudShellExpanded(state),
   allBackends: selectAssistantAllBackends(state),
@@ -554,6 +602,7 @@ const stateToProps = (state: RootState): StateProps => ({
 const dispatchToProps = (dispatch): DispatchProps => ({
   sendQuery: (query) => dispatch(sendQueryToAssistant(query)),
   sendFeedback: (good) => dispatch(sendFeedbackToAssistant(good)),
+  clearAssistantAnswer: () => dispatch(setAssistantAnswer(undefined)),
   setYaml: (yaml, isAppend) => dispatch(setAssistantYaml(yaml, isAppend)),
   setCommand: (command) => dispatch(setAssistantCommand(command)),
   openCloudshell: () => dispatch(toggleCloudShellExpanded()),

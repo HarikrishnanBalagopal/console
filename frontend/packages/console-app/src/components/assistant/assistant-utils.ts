@@ -4,9 +4,8 @@ import { AssistantModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { AssistantAuthCreds, AssistantAnswer, DiscoveryAnswer, AssistantBackendForRedux, AsyncAssistantAnswerJobId } from './assistant-types';
 
-export const ASSISTANT_VERSION = 'v1.168';
-export const ASSISTANT_BRANDING = 'Lightspeed';
-export const ASSISTANT_TITLE = `${ASSISTANT_BRANDING} ${ASSISTANT_VERSION}`;
+export const ASSISTANT_VERSION = 'v1.169.0';
+export const ASSISTANT_TITLE = 'Lightspeed';
 const ASSISTANT_AUTH_EMAIL = 'assistant-email';
 const ASSISTANT_AUTH_TOKEN = 'assistant-token';
 let ASSISTANT_MAX_POLL_ATTEMPTS = 60;
