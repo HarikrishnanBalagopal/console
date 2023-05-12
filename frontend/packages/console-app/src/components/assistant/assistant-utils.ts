@@ -4,7 +4,7 @@ import { AssistantModel, SecretModel } from '@console/internal/models';
 import { Base64 } from 'js-base64';
 import { AssistantAuthCreds, AssistantAnswer, DiscoveryAnswer, AssistantBackendForRedux, AsyncAssistantAnswerJobId } from './assistant-types';
 
-export const ASSISTANT_VERSION = 'v1.169.0';
+export const ASSISTANT_VERSION = 'v1.170.0';
 export const ASSISTANT_TITLE = 'Lightspeed';
 const ASSISTANT_AUTH_EMAIL = 'assistant-email';
 const ASSISTANT_AUTH_TOKEN = 'assistant-token';
@@ -193,7 +193,7 @@ export const getAllAssistantBackends = async (
       ASSISTANT_POLL_SLEEP_MS = assistantObject.spec.timeBetweenPollAttempts;
     }
     if (assistantObject.spec.hideAdvancedTab !== undefined) setHideAdvancedTab(Boolean(assistantObject.spec.hideAdvancedTab));
-    assistantObject.spec.backends.forEach(async (backend) => {
+    await Promise.all(assistantObject.spec.backends.map(async (backend) => {
       try {
         console.log('assistant backend', backend);
         let creds: AssistantAuthCreds | undefined = undefined;
@@ -218,7 +218,7 @@ export const getAllAssistantBackends = async (
       } catch (e) {
         console.error(`failed to get the assistant backend ${JSON.stringify(backend)} ${e}`);
       }
-    });
+    }));
   } catch (e) {
     throw new Error(`failed to get all the assistant backends. ${e}`);
   }

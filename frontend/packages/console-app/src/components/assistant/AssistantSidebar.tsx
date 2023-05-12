@@ -43,6 +43,7 @@ import {
   setAssistantCurrentModelId, setAssistantCurrentTaskId, setAssistantHideAdvancedTab, setAssistantYaml,
 } from '../../redux/actions/assistant-actions';
 import {
+  isAssistantFetchingBackends,
   isAssistantHideAdvancedTab,
   isAssistantLoading,
   isAssistantSendingFeedback,
@@ -55,6 +56,7 @@ import {
   selectAssistantCurrentTaskId,
   selectAssistantError,
   selectAssistantFeedbackError,
+  selectAssistantFetchingBackendsError,
 } from '../../redux/reducers/assistant-selectors';
 import useCloudShellAvailable from '../cloud-shell/useCloudShellAvailable';
 import { toggleCloudShellExpanded } from '../../redux/actions/cloud-shell-actions';
@@ -62,9 +64,9 @@ import { isCloudShellExpanded } from '../../redux/reducers/cloud-shell-selectors
 import { AssistantAllBackends, AssistantAnswer, AssistantModel, AssistantModelTask } from './assistant-types';
 import { ASSISTANT_TITLE, ASSISTANT_VERSION } from './assistant-utils';
 import { getImportYAMLPath, useOnYamlEditPage } from './useOnYamlEditPage';
+import { setAssistantAnswer } from '../../redux/actions/assistant-actions';
 
 import './AssistantSidebar.scss';
-import { setAssistantAnswer } from '../../redux/actions/assistant-actions';
 
 type StateProps = {
   activeNamespace: string;
@@ -81,6 +83,8 @@ type StateProps = {
   currentJobProgress?: number;
   currentEditorYaml?: string;
   hideAdvancedTab?: boolean;
+  isFetchingBackends?: boolean;
+  fetchBackendError?: string;
 };
 
 type DispatchProps = {
@@ -192,6 +196,8 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   currentJobProgress,
   currentEditorYaml,
   hideAdvancedTab,
+  isFetchingBackends,
+  fetchBackendError,
   onClose,
   openCloudshell,
   sendQuery,
@@ -342,6 +348,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
       onSubmit();
     }
   };
+
   return (
     <NotificationDrawer translate='no' className="on-top-z-index-301">
       <NotificationDrawerHeader title={ASSISTANT_TITLE}>
@@ -374,7 +381,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
                 value={query}
                 rows={4}
                 onKeyDown={onKeyDown}
-                isDisabled={isAssistantAnswerLoading}
+                isDisabled={backendArray.length === 0 || isAssistantAnswerLoading}
                 onChange={(v) => setQuery(v)}
               />
             </FormGroup>
@@ -382,7 +389,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
               {!hideAdvancedTab && (<p>UI version: {ASSISTANT_VERSION}</p>)}
               <Button
                 style={{ marginLeft: 'auto' }}
-                isDisabled={isAssistantAnswerLoading || !query}
+                isDisabled={backendArray.length === 0 || isAssistantAnswerLoading || !query}
                 onClick={onSubmit}
                 variant={ButtonVariant.secondary}
                 type="submit">
@@ -402,9 +409,15 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
             </ActionGroup>
             {
               backendArray.length === 0 ? (
-                <div className='center-text'>
-                  <Spinner /> Fetching the list of Assistant backends...
-                </div>
+                isFetchingBackends ? (
+                  <div className='center-text'>
+                    <Spinner /> Fetching the list of Assistant backends...
+                  </div>
+                ) : fetchBackendError ? (
+                  <Alert variant='danger' title={fetchBackendError} />
+                ) : (
+                  <Alert variant='warning' title='None of the configured Assistant backends are available right now.' />
+                )
               ) : hideAdvancedTab ? (
                 null
               ) : (
@@ -597,6 +610,8 @@ const stateToProps = (state: RootState): StateProps => ({
   currentJobProgress: selectAssistantCurrentJobProgress(state),
   currentEditorYaml: selectAssistantCurrentEditorYaml(state),
   hideAdvancedTab: isAssistantHideAdvancedTab(state),
+  isFetchingBackends: isAssistantFetchingBackends(state),
+  fetchBackendError: selectAssistantFetchingBackendsError(state),
 });
 
 const dispatchToProps = (dispatch): DispatchProps => ({
